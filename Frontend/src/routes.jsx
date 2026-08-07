@@ -9,6 +9,16 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserGroupMaster from "./pages/admin/user/UserGroupMaster";
 import CreateUser from "./pages/admin/user/CreateUser";
 import CreateUserType from "./pages/admin/user/CreateUserType";
+import SystemSettingsMasterPage from "./pages/admin/masters/SystemSettingsMasterPage";
+import OrderingMasterPage from "./pages/admin/masters/OrderingMasterPage";
+import DomainMasterPage from "./pages/admin/masters/DomainMasterPage";
+import EmailMasterPage from "./pages/admin/masters/EmailMasterPage";
+import SupportMasterPage from "./pages/admin/masters/SupportMasterPage";
+import InvoiceMasterPage from "./pages/admin/masters/InvoiceMasterPage";
+import SecurityMasterPage from "./pages/admin/masters/SecurityMasterPage";
+import CustomerMasterPage from "./pages/admin/masters/CustomerMasterPage";
+import ResellerMasterPage from "./pages/admin/masters/ResellerMasterPage";
+import MasterCreatorPage from "./pages/admin/masters/MasterCreatorPage";
 import ActivityReport from "./pages/admin/ActivityReport";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -75,6 +85,19 @@ export default function AppRoutes() {
                     path="/admin/user-types/create"
                     element={<CreateUserType />}
                 />
+            </Route>
+
+            <Route element={<ProtectedRoute allowedRole="admin" />}>
+                <Route path="/admin/masters/system-settings" element={<SystemSettingsMasterPage />} />
+                <Route path="/admin/masters/ordering-master" element={<OrderingMasterPage />} />
+                <Route path="/admin/masters/domain-master" element={<DomainMasterPage />} />
+                <Route path="/admin/masters/email-master" element={<EmailMasterPage />} />
+                <Route path="/admin/masters/support-master" element={<SupportMasterPage />} />
+                <Route path="/admin/masters/invoice-master" element={<InvoiceMasterPage />} />
+                <Route path="/admin/masters/security-master" element={<SecurityMasterPage />} />
+                <Route path="/admin/masters/customer-master" element={<CustomerMasterPage />} />
+                <Route path="/admin/masters/reseller-master" element={<ResellerMasterPage />} />
+                <Route path="/admin/masters/master-creator" element={<MasterCreatorPage />} />
             </Route>
         </Routes>
     );

@@ -1,55 +1,72 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const cookieParser = require("cookie-parser");
-
 const path = require("path");
-const uploadConfig = require("./config/uploadConfig.js");
 const { connectDB } = require("./config/db.js");
 
 // Routes
 const authRoutes = require("./routes/authRoutes.js");
 const adminRoutes = require("./routes/adminRoutes.js");
 const userTypeMasterRoutes = require("./routes/userTypeMasterRoutes.js");
+const systemSettingsRoutes = require("./routes/systemSettingsRoutes.js");
+const orderingMasterRoutes = require("./routes/orderingMasterRoutes.js");
+const domainMasterRoutes = require("./routes/domainMasterRoutes.js");
+const emailMasterRoutes = require("./routes/emailMasterRoutes.js");
+const supportMasterRoutes = require("./routes/supportMasterRoutes.js");
+const invoiceMasterRoutes = require("./routes/invoiceMasterRoutes.js");
+const securityMasterRoutes = require("./routes/securityMasterRoutes.js");
+const customerMasterRoutes = require("./routes/customerMasterRoutes.js");
+const resellerMasterRoutes = require("./routes/resellerMasterRoutes.js");
+const masterCreatorRoutes = require("./routes/masterCreatorRoutes.js");
 
 // Model Initializations
 const { initUserModel } = require("./models/userModel.js");
 const { createUserTypesTable, createUserTypePermissionsTable } = require("./models/userTypeModel.js");
 const { createAuditLogsTable } = require("./models/auditLogModel.js");
 const { createUserDevicesTable } = require("./models/deviceModel.js");
-
+const { createSystemSettingsTables } = require("./models/systemSettingsModel.js");
+const { createOrderingMasterTables } = require("./models/orderingMasterModel.js");
+const { createDomainMasterTables } = require("./models/domainMasterModel.js");
+const { createEmailMasterTables } = require("./models/emailMasterModel.js");
+const { createSupportMasterTables } = require("./models/supportMasterModel.js");
+const { createInvoiceMasterTables } = require("./models/invoiceMasterModel.js");
+const { createSecurityMasterTables } = require("./models/securityMasterModel.js");
+const { createCustomerMasterTables } = require("./models/customerMasterModel.js");
+const { createResellerMasterTables } = require("./models/resellerMasterModel.js");
+const { createMasterCreatorTables } = require("./models/masterCreatorModel.js");
 
 const app = express();
 
-const allowedOrigins = [
-    "http://localhost:5173",
-    "https://crm.jasminmobile.com",
-    "http://crm.jasminmobile.com",
-    "https://www.crm.jasminmobile.com",
-    "http://www.crm.jasminmobile.com",
-    process.env.FRONTEND_URL
-].filter(Boolean);
-
 app.use(cors({
-    origin: allowedOrigins,
+    origin: ["http://localhost:5173", "http://localhost:3000", "http://localhost:5174"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "X-HTTP-Method-Override", "x-device-id", "device-id"],
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-device-id", "device-id", "X-HTTP-Method-Override"]
 }));
-app.use(express.json());
-app.use(cookieParser());
 
-// Serve uploaded files statically if set to express
-if (uploadConfig.serveMethod === "express") {
-    console.log(`Serving uploaded files statically from: ${uploadConfig.uploadDir}`);
-    app.use("/uploads", express.static(uploadConfig.uploadDir));
-}
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// HTTP Method Override middleware for environments that block PUT and DELETE requests
+// Serve uploaded files statically
+const { uploadDir } = require("./config/uploadConfig.js");
+console.log(`Serving uploaded files statically from: ${uploadDir}`);
+app.use("/uploads", express.static(uploadDir));
+
+// Logging Middleware
 app.use((req, res, next) => {
-    const methodOverride = req.headers['x-http-method-override'];
-    if (req.method === 'POST' && methodOverride) {
-        req.method = methodOverride.toUpperCase();
+    const start = Date.now();
+    res.on("finish", () => {
+        const duration = Date.now() - start;
+        console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`);
+    });
+    next();
+});
+
+// Method Override Middleware
+app.use((req, res, next) => {
+    const override = req.headers["x-http-method-override"];
+    if (override && typeof override === "string") {
+        req.method = override.toUpperCase();
     }
     next();
 });
@@ -57,7 +74,16 @@ app.use((req, res, next) => {
 app.use(["/api/auth", "/auth"], authRoutes);
 app.use(["/api/admin", "/admin"], adminRoutes);
 app.use(["/api/usertypes", "/usertypes"], userTypeMasterRoutes);
-
+app.use(["/api/system-settings", "/system-settings"], systemSettingsRoutes);
+app.use(["/api/ordering-master", "/ordering-master"], orderingMasterRoutes);
+app.use(["/api/domain-master", "/domain-master"], domainMasterRoutes);
+app.use(["/api/email-master", "/email-master"], emailMasterRoutes);
+app.use(["/api/support-master", "/support-master"], supportMasterRoutes);
+app.use(["/api/invoice-master", "/invoice-master"], invoiceMasterRoutes);
+app.use(["/api/security-master", "/security-master"], securityMasterRoutes);
+app.use(["/api/customer-master", "/customer-master"], customerMasterRoutes);
+app.use(["/api/reseller-master", "/reseller-master"], resellerMasterRoutes);
+app.use(["/api/master-creator", "/master-creator"], masterCreatorRoutes);
 
 // Global 404 handler
 app.use((req, res) => {
@@ -75,12 +101,21 @@ const startServer = async () => {
         await connectDB();
 
         console.log("Initializing database tables...");
-        // Initialize tables in correct dependency order
         await initUserModel();
         await createUserTypesTable();
         await createUserTypePermissionsTable();
         await createAuditLogsTable();
         await createUserDevicesTable();
+        await createSystemSettingsTables();
+        await createOrderingMasterTables();
+        await createDomainMasterTables();
+        await createEmailMasterTables();
+        await createSupportMasterTables();
+        await createInvoiceMasterTables();
+        await createSecurityMasterTables();
+        await createCustomerMasterTables();
+        await createResellerMasterTables();
+        await createMasterCreatorTables();
 
         console.log("All database tables are initialized and ready.");
 
