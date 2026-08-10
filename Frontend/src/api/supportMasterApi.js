@@ -34,6 +34,3 @@ apiClient.interceptors.request.use(async (config) => {
 export const getSupportConfig = () => apiClient.get("/support-master/config");
 export const updateSupportConfig = (data) => apiClient.put("/support-master/config", data);
 
-export const getAllSupportRecords = () => apiClient.get("/support-master/records");
-export const createSupportRecord = (data) => apiClient.post("/support-master/records", data);
-export const deleteSupportRecord = (id) => apiClient.delete(`/support-master/records/${id}`);

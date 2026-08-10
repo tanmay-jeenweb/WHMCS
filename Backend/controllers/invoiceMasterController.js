@@ -19,42 +19,73 @@ const getInvoiceConfig = async (req, res) => {
 const updateInvoiceConfig = async (req, res) => {
     try {
         const {
-            continuous_invoicing,
-            invoice_due_days,
-            payment_reminder_emails,
+            continuous_invoice_generation,
+            enable_metric_usage_invoicing,
+            enable_pdf_invoices,
+            pdf_paper_size,
+            pdf_font_family,
+            custom_pdf_font,
+            store_client_data_snapshot,
+            enable_mass_payment,
+            clients_choose_gateway,
+            group_similar_line_items,
+            cancellation_request_handling,
+            automatic_subscription_management,
+            enable_proforma_invoicing,
+            sequential_paid_invoice_numbering,
+            sequential_invoice_number_format,
+            next_paid_invoice_number,
             late_fee_type,
             late_fee_amount,
             late_fee_minimum,
-            auto_cancellation_days,
-            tax_enabled,
-            tax_type,
-            tax_name,
-            tax_rate,
+            accepted_credit_card_types,
+            issue_number_start_date,
+            invoice_incrementation,
+            credit_note_number_incrementation,
+            debit_note_number_incrementation,
             invoice_starting_number
         } = req.body;
 
         const query = `
             UPDATE invoice_config 
-            SET continuous_invoicing = ?, invoice_due_days = ?, payment_reminder_emails = ?, 
-                late_fee_type = ?, late_fee_amount = ?, late_fee_minimum = ?, 
-                auto_cancellation_days = ?, tax_enabled = ?, tax_type = ?, 
-                tax_name = ?, tax_rate = ?, invoice_starting_number = ?
+            SET continuous_invoice_generation = ?, enable_metric_usage_invoicing = ?, enable_pdf_invoices = ?,
+                pdf_paper_size = ?, pdf_font_family = ?, custom_pdf_font = ?,
+                store_client_data_snapshot = ?, enable_mass_payment = ?, clients_choose_gateway = ?,
+                group_similar_line_items = ?, cancellation_request_handling = ?, automatic_subscription_management = ?,
+                enable_proforma_invoicing = ?, sequential_paid_invoice_numbering = ?, sequential_invoice_number_format = ?,
+                next_paid_invoice_number = ?, late_fee_type = ?, late_fee_amount = ?,
+                late_fee_minimum = ?, accepted_credit_card_types = ?, issue_number_start_date = ?,
+                invoice_incrementation = ?, credit_note_number_incrementation = ?, debit_note_number_incrementation = ?,
+                invoice_starting_number = ?
             WHERE id = 1
         `;
 
         await db.execute(query, [
-            continuous_invoicing || 'disabled',
-            invoice_due_days || 14,
-            payment_reminder_emails || 'enabled',
+            continuous_invoice_generation || 'disabled',
+            enable_metric_usage_invoicing || 'disabled',
+            enable_pdf_invoices || 'disabled',
+            pdf_paper_size || 'A4',
+            pdf_font_family || 'Helvetica',
+            custom_pdf_font || '',
+            store_client_data_snapshot || 'disabled',
+            enable_mass_payment || 'disabled',
+            clients_choose_gateway || 'disabled',
+            group_similar_line_items || 'disabled',
+            cancellation_request_handling || 'disabled',
+            automatic_subscription_management || 'disabled',
+            enable_proforma_invoicing || 'disabled',
+            sequential_paid_invoice_numbering || 'disabled',
+            sequential_invoice_number_format || '{NUMBER}',
+            next_paid_invoice_number || 1,
             late_fee_type || 'percentage',
             late_fee_amount || 0.00,
             late_fee_minimum || 0.00,
-            auto_cancellation_days || 30,
-            tax_enabled || 'disabled',
-            tax_type || 'exclusive',
-            tax_name || 'VAT',
-            tax_rate || 0.00,
-            invoice_starting_number || 10001
+            accepted_credit_card_types || '',
+            issue_number_start_date || 'disabled',
+            invoice_incrementation || 1,
+            credit_note_number_incrementation || 1,
+            debit_note_number_incrementation || 1,
+            invoice_starting_number || 1
         ]);
 
         await createAuditLog(
@@ -64,7 +95,7 @@ const updateInvoiceConfig = async (req, res) => {
             'invoice_master',
             'Updated Invoice Master Configuration',
             null,
-            { invoice_due_days, tax_enabled, tax_name }
+            { late_fee_type, late_fee_amount, invoice_starting_number }
         );
 
         res.status(200).json({ success: true, message: "Invoice configuration saved successfully!" });
@@ -74,59 +105,7 @@ const updateInvoiceConfig = async (req, res) => {
     }
 };
 
-// CRUD FOR INVOICE RECORDS (DataTable.jsx)
-const getAllInvoiceRecords = async (req, res) => {
-    try {
-        const [rows] = await db.execute("SELECT * FROM invoice_records ORDER BY id DESC");
-        res.status(200).json({ success: true, data: rows });
-    } catch (error) {
-        console.error("Get Invoice Records Error:", error);
-        res.status(500).json({ success: false, message: "Failed to fetch invoice records" });
-    }
-};
-
-const createInvoiceRecord = async (req, res) => {
-    try {
-        const { invoice_number, client_name, invoice_date, due_date, total_amount, status } = req.body;
-        if (!invoice_number || !client_name) {
-            return res.status(400).json({ success: false, message: "Invoice Number and Client Name are required" });
-        }
-
-        const [result] = await db.execute(
-            `INSERT INTO invoice_records (invoice_number, client_name, invoice_date, due_date, total_amount, status)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [
-                invoice_number,
-                client_name,
-                invoice_date || new Date().toISOString().split('T')[0],
-                due_date || new Date(Date.now() + 14*24*60*60*1000).toISOString().split('T')[0],
-                total_amount || 0.00,
-                status || 'unpaid'
-            ]
-        );
-
-        res.status(201).json({ success: true, message: "Invoice record created successfully!", id: result.insertId });
-    } catch (error) {
-        console.error("Create Invoice Record Error:", error);
-        res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to create invoice record" });
-    }
-};
-
-const deleteInvoiceRecord = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await db.execute("DELETE FROM invoice_records WHERE id = ?", [id]);
-        res.status(200).json({ success: true, message: "Invoice record deleted successfully!" });
-    } catch (error) {
-        console.error("Delete Invoice Record Error:", error);
-        res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to delete invoice record" });
-    }
-};
-
 module.exports = {
     getInvoiceConfig,
-    updateInvoiceConfig,
-    getAllInvoiceRecords,
-    createInvoiceRecord,
-    deleteInvoiceRecord
+    updateInvoiceConfig
 };

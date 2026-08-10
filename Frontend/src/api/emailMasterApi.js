@@ -34,6 +34,3 @@ apiClient.interceptors.request.use(async (config) => {
 export const getEmailConfig = () => apiClient.get("/email-master/config");
 export const updateEmailConfig = (data) => apiClient.put("/email-master/config", data);
 
-export const getAllEmailRecords = () => apiClient.get("/email-master/records");
-export const createEmailRecord = (data) => apiClient.post("/email-master/records", data);
-export const deleteEmailRecord = (id) => apiClient.delete(`/email-master/records/${id}`);
