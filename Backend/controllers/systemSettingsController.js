@@ -63,57 +63,15 @@ const updateGeneralConfig = async (req, res) => {
             req.user ? req.user.username : 'admin',
             req.headers['x-device-id'] || 'system',
             'system_settings',
-            'Updated System Settings Configuration',
+            'Updated General Settings Configuration',
             null,
             { company_name, email_address, maintenance_mode }
         );
 
-        res.status(200).json({ success: true, message: "System configuration updated successfully!" });
+        res.status(200).json({ success: true, message: "General settings updated successfully!" });
     } catch (error) {
         console.error("Update General Config Error:", error);
         res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to update configuration" });
-    }
-};
-
-// BATCH CRUD OPERATIONS FOR DATATABLE
-const getAllBatches = async (req, res) => {
-    try {
-        const [rows] = await db.execute("SELECT * FROM system_settings_batches ORDER BY id DESC");
-        res.status(200).json({ success: true, data: rows });
-    } catch (error) {
-        console.error("Get All Batches Error:", error);
-        res.status(500).json({ success: false, message: "Failed to fetch migration batches" });
-    }
-};
-
-const createBatch = async (req, res) => {
-    try {
-        const { batch_name, migration_path, migration_endpoint, user_count, status } = req.body;
-        if (!batch_name || !migration_path) {
-            return res.status(400).json({ success: false, message: "Batch Name and Migration Path are required" });
-        }
-
-        const [result] = await db.execute(
-            `INSERT INTO system_settings_batches (batch_name, migration_path, migration_endpoint, user_count, status)
-             VALUES (?, ?, ?, ?, ?)`,
-            [batch_name, migration_path, migration_endpoint || '', user_count || 0, status || 'scheduled']
-        );
-
-        res.status(201).json({ success: true, message: "Migration batch created successfully!", id: result.insertId });
-    } catch (error) {
-        console.error("Create Batch Error:", error);
-        res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to create batch" });
-    }
-};
-
-const deleteBatch = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await db.execute("DELETE FROM system_settings_batches WHERE id = ?", [id]);
-        res.status(200).json({ success: true, message: "Migration batch deleted successfully!" });
-    } catch (error) {
-        console.error("Delete Batch Error:", error);
-        res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to delete batch" });
     }
 };
 
@@ -141,8 +99,5 @@ const uploadSystemLogo = async (req, res) => {
 module.exports = {
     getGeneralConfig,
     updateGeneralConfig,
-    getAllBatches,
-    createBatch,
-    deleteBatch,
     uploadSystemLogo
 };

@@ -1,21 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../../components/Navbar';
-import DataTable from '../../../components/DataTable';
 import {
   getGeneralConfig,
   updateGeneralConfig,
-  uploadSystemLogo,
-  getAllBatches,
-  createBatch,
-  deleteBatch
+  uploadSystemLogo
 } from '../../../api/systemSettingsApi';
 import toast from 'react-hot-toast';
 
 export default function SystemSettingsMasterPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('config'); // 'config' or 'records'
-  const [recordsSubTab, setRecordsSubTab] = useState('config_table'); // 'config_table' or 'batches_table'
 
   // General Config Form State (Clean empty initial values)
   const [config, setConfig] = useState({
@@ -35,19 +29,6 @@ export default function SystemSettingsMasterPage() {
   });
   const [savingConfig, setSavingConfig] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-
-  // DataTable State for Tab 2
-  const [batches, setBatches] = useState([]);
-  const [batchesLoading, setBatchesLoading] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newBatch, setNewBatch] = useState({
-    batch_name: '',
-    migration_path: '',
-    migration_endpoint: '',
-    user_count: '',
-    status: 'scheduled'
-  });
-  const [creatingBatch, setCreatingBatch] = useState(false);
 
   const fetchGeneral = async () => {
     try {
@@ -81,23 +62,8 @@ export default function SystemSettingsMasterPage() {
     }
   };
 
-  const fetchBatchesData = async () => {
-    setBatchesLoading(true);
-    try {
-      const res = await getAllBatches();
-      if (res.data?.success) {
-        setBatches(res.data.data || []);
-      }
-    } catch (err) {
-      console.error("Failed to load batches", err);
-    } finally {
-      setBatchesLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchGeneral();
-    fetchBatchesData();
   }, []);
 
   const handleSaveGeneralConfig = async (e) => {
@@ -141,192 +107,45 @@ export default function SystemSettingsMasterPage() {
     }
   };
 
-  const handleCreateBatch = async (e) => {
-    e.preventDefault();
-    if (!newBatch.batch_name || !newBatch.migration_path) {
-      toast.error("Please fill in Batch Name and Migration Path.");
-      return;
-    }
-    setCreatingBatch(true);
-    try {
-      await createBatch(newBatch);
-      toast.success("Migration batch created successfully!");
-      setShowAddModal(false);
-      setNewBatch({
-        batch_name: '',
-        migration_path: '',
-        migration_endpoint: '',
-        user_count: '',
-        status: 'scheduled'
-      });
-      fetchBatchesData();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create migration batch.");
-    } finally {
-      setCreatingBatch(false);
-    }
-  };
-
-  const handleDeleteBatch = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this migration batch?")) return;
-    try {
-      await deleteBatch(id);
-      toast.success("Migration batch deleted successfully!");
-      fetchBatchesData();
-    } catch (err) {
-      toast.error("Failed to delete migration batch.");
-    }
-  };
-
-  // Construct Saved Settings Rows array for DataTable
-  const savedSettingsRows = [
-    { id: 1, field_name: 'Company Name', category: 'Branding', value: config.company_name || '(Not Set)', type: 'Text' },
-    { id: 2, field_name: 'Email Address', category: 'Branding', value: config.email_address || '(Not Set)', type: 'Email' },
-    { id: 3, field_name: 'Domain URL', category: 'Branding', value: config.domain_url || '(Not Set)', type: 'URL' },
-    { id: 4, field_name: 'Logo Image URL', category: 'Branding', value: config.logo_url || '(Not Set)', type: 'Image Asset' },
-    { id: 5, field_name: 'WHMCS System URL', category: 'URLs & Theme', value: config.system_url || '(Not Set)', type: 'URL' },
-    { id: 6, field_name: 'System Theme', category: 'URLs & Theme', value: config.system_theme || 'Twenty-One', type: 'Theme Dropdown' },
-    { id: 7, field_name: 'Friendly URLs Mode', category: 'URLs & Theme', value: config.friendly_urls || 'enabled', type: 'SEO Mode' },
-    { id: 8, field_name: 'Limit Activity Log Entries', category: 'Pagination & Logs', value: config.limit_activity_log || '10000', type: 'Integer' },
-    { id: 9, field_name: 'Records to Display per Page', category: 'Pagination & Logs', value: config.records_per_page || '50', type: 'Integer' },
-    { id: 10, field_name: 'Pay To Text (Invoice)', category: 'Invoice & Maintenance', value: config.pay_to_text || '(Not Set)', type: 'Text Block' },
-    { id: 11, field_name: 'Maintenance Mode Status', category: 'Invoice & Maintenance', value: config.maintenance_mode || 'disabled', type: 'Toggle Switch' },
-    { id: 12, field_name: 'Maintenance Mode Message', category: 'Invoice & Maintenance', value: config.maintenance_mode_message || '(Not Set)', type: 'Text Block' },
-    { id: 13, field_name: 'Maintenance Redirect URL', category: 'Invoice & Maintenance', value: config.maintenance_mode_redirect || '(Not Set)', type: 'URL' }
-  ];
-
-  const configTableColumns = [
-    { key: 'id', label: 'ID', minWidth: '70px', sortable: true },
-    { key: 'field_name', label: 'Field Name', minWidth: '220px', sortable: true, render: row => <span className="font-bold text-slate-900">{row.field_name}</span> },
-    { key: 'category', label: 'Category', minWidth: '180px', sortable: true, render: row => <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 border border-blue-100 text-blue-700">{row.category}</span> },
-    {
-      key: 'value', label: 'Saved Value in MySQL', minWidth: '300px', sortable: true, render: row => {
-        const valStr = String(row.value || '');
-        if (row.field_name === 'Logo Image URL' && valStr.startsWith('http')) {
-          return (
-            <div className="flex items-center gap-2">
-              <img src={valStr} alt="Logo" className="w-8 h-8 object-contain rounded border border-slate-200 bg-white p-0.5" />
-              <span className="font-mono text-xs text-blue-900 truncate max-w-xs">{valStr}</span>
-            </div>
-          );
-        }
-        return (
-          <span className={`font-mono text-xs ${valStr.includes('(Not Set)') ? 'text-slate-400 italic' : 'text-slate-800'}`}>
-            {valStr}
-          </span>
-        );
-      }
-    },
-    { key: 'type', label: 'Field Type', minWidth: '140px', sortable: true, render: row => <span className="text-xs text-slate-500">{row.type}</span> },
-    {
-      key: 'actions', label: 'Action', minWidth: '100px', sortable: false, render: () => (
-        <button
-          onClick={() => setActiveTab('config')}
-          className="text-xs font-bold text-blue-900 hover:bg-blue-50 px-2.5 py-1 rounded-lg transition-all"
-        >
-          Edit Field
-        </button>
-      )
-    }
-  ];
-
-  // DataTable Columns definition for Migration Batches
-  const batchColumns = [
-    { key: 'id', label: 'ID', minWidth: '80px', sortable: true },
-    { key: 'batch_name', label: 'Batch Name', minWidth: '220px', sortable: true, render: row => <span className="font-bold text-blue-900">{row.batch_name}</span> },
-    { key: 'migration_path', label: 'Migration Path', minWidth: '220px', sortable: true, render: row => <span className="font-mono text-xs text-slate-700">{row.migration_path}</span> },
-    { key: 'migration_endpoint', label: 'Target Endpoint', minWidth: '240px', sortable: true, render: row => <span className="font-mono text-xs text-slate-600 truncate max-w-xs">{row.migration_endpoint || 'N/A'}</span> },
-    { key: 'user_count', label: 'Users', minWidth: '100px', sortable: true, render: row => <span className="font-mono font-bold text-slate-800">{row.user_count}</span> },
-    {
-      key: 'status', label: 'Status', minWidth: '130px', sortable: true, render: row => (
-        <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide border ${
-          row.status === 'completed'
-            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-            : row.status === 'scheduled'
-            ? 'bg-amber-50 text-amber-700 border-amber-200'
-            : 'bg-rose-50 text-rose-700 border-rose-200'
-        }`}>
-          {row.status}
-        </span>
-      )
-    },
-    {
-      key: 'actions', label: 'Actions', minWidth: '110px', sortable: false, render: row => (
-        <button
-          onClick={() => handleDeleteBatch(row.id)}
-          className="text-xs font-bold text-rose-600 hover:text-rose-800 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all"
-        >
-          Delete
-        </button>
-      )
-    }
-  ];
-
   return (
-    <div className="flex-1 flex flex-col bg-slate-50">
+    <div className="flex-1 bg-slate-50 font-sans text-slate-900">
       {/* Universal Header (Navbar) */}
-      <Navbar />
+      <Navbar title="CRM Admin" />
 
       {/* Main Container */}
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+      <main className="mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
 
-        {/* Tab Navigation Controls */}
-        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/admin/dashboard')} className="text-xs font-semibold text-slate-500 hover:text-blue-900 flex items-center gap-1">
-              <span>←</span> Dashboard
-            </button>
-            <span className="text-slate-300">|</span>
-            <h1 className="text-xl font-bold text-slate-900">System Settings Master</h1>
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">General Setting Master</h1>
+            <p className="text-slate-500 mt-1">Configure company branding, system URLs, log limits, and maintenance mode.</p>
           </div>
-
-          <div className="flex items-center gap-2 bg-slate-200/60 p-1 rounded-xl border border-slate-300">
-            <button
-              onClick={() => setActiveTab('config')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === 'config'
-                  ? 'bg-white text-blue-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              ⚙️ General Configuration
-            </button>
-            <button
-              onClick={() => setActiveTab('records')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === 'records'
-                  ? 'bg-white text-blue-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              📦 System Data & Records History
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/admin/dashboard")}
+            className="text-slate-500 hover:text-slate-700 font-medium text-sm flex items-center gap-1 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Back to Dashboard
+          </button>
         </div>
 
-        {/* TAB 1: 13-FIELD GENERAL CONFIGURATION FORM */}
-        {activeTab === 'config' && (
-          <form onSubmit={handleSaveGeneralConfig} className="space-y-6">
+        {/* Form Container */}
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+          <form onSubmit={handleSaveGeneralConfig} className="space-y-8">
 
             {/* Section 1: Organization & Branding */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-              <div className="border-b border-slate-100 pb-3 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                    🏢
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900">Organization & Branding</h2>
-                    <p className="text-xs text-slate-500">Set up your company identity, sender email, domain, and logo image.</p>
-                  </div>
+            <div className="space-y-5">
+              <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                  🏢
                 </div>
-                <button
-                  type="submit"
-                  disabled={savingConfig}
-                  className="px-5 py-2 rounded-xl font-bold text-xs bg-blue-900 text-white hover:bg-blue-800 shadow transition-all flex items-center gap-1.5 shrink-0"
-                >
-                  {savingConfig ? <><span>⏳</span> Saving...</> : <><span>💾</span> Save Changes</>}
-                </button>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Organization & Branding</h2>
+                  <p className="text-xs text-slate-500">Set up your company identity, sender email, domain, and logo image.</p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -427,8 +246,10 @@ export default function SystemSettingsMasterPage() {
               </div>
             </div>
 
+            <hr className="border-slate-100" />
+
             {/* Section 2: System URLs & Theme Settings */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">
                   🌐
@@ -486,8 +307,10 @@ export default function SystemSettingsMasterPage() {
               </div>
             </div>
 
+            <hr className="border-slate-100" />
+
             {/* Section 3: Performance, Logs & Display Limits */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm">
                   ⚙️
@@ -527,8 +350,10 @@ export default function SystemSettingsMasterPage() {
               </div>
             </div>
 
+            <hr className="border-slate-100" />
+
             {/* Section 4: Invoice Details & Maintenance Mode */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
                   🧾
@@ -602,176 +427,18 @@ export default function SystemSettingsMasterPage() {
             </div>
 
             {/* Bottom Form Submit Action */}
-            <div className="flex justify-end pt-2">
+            <div className="pt-4">
               <button
                 type="submit"
                 disabled={savingConfig}
-                className="px-6 py-2.5 rounded-xl font-bold text-sm bg-blue-900 text-white hover:bg-blue-800 shadow-md transition-all flex items-center gap-2"
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#0056cf] hover:bg-[#0040a1] focus:ring-2 focus:ring-offset-2 focus:ring-[#0056cf] disabled:opacity-50 transition-colors"
               >
-                {savingConfig ? (
-                  <><span>⏳</span> Saving Changes...</>
-                ) : (
-                  <><span>💾</span> Save Configuration Changes</>
-                )}
+                {savingConfig ? "Saving Configuration..." : "Save Configuration Changes"}
               </button>
             </div>
 
           </form>
-        )}
-
-        {/* TAB 2: SYSTEM DATA & RECORDS HISTORY */}
-        {activeTab === 'records' && (
-          <div className="space-y-6">
-            
-            {/* View Selector Buttons */}
-            <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-              <button
-                onClick={() => setRecordsSubTab('config_table')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  recordsSubTab === 'config_table'
-                    ? 'bg-blue-900 text-white shadow-sm'
-                    : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
-                }`}
-              >
-                ⚙️ Live Saved Configuration Values (DataTable)
-              </button>
-              <button
-                onClick={() => setRecordsSubTab('batches_table')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  recordsSubTab === 'batches_table'
-                    ? 'bg-blue-900 text-white shadow-sm'
-                    : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
-                }`}
-              >
-                📦 Migration Batches & System History
-              </button>
-            </div>
-
-            {/* VIEW 1: LIVE SAVED CONFIGURATIONS DATATABLE */}
-            {recordsSubTab === 'config_table' && (
-              <DataTable
-                tableId="system_settings_live_saved_config"
-                title="Live Saved System Configurations in MySQL"
-                data={savedSettingsRows}
-                columns={configTableColumns}
-                searchPlaceholder="Search saved configuration fields, categories, values..."
-              />
-            )}
-
-            {/* VIEW 2: MIGRATION BATCHES HISTORY DATATABLE */}
-            {recordsSubTab === 'batches_table' && (
-              <DataTable
-                tableId="system_settings_batches_history"
-                title="Migration Batches & System History"
-                data={batches}
-                columns={batchColumns}
-                loading={batchesLoading}
-                searchPlaceholder="Search migration batches..."
-                actionButton={
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-blue-900 px-4 text-sm font-semibold text-white transition-all hover:bg-blue-800 shadow-md"
-                  >
-                    <span>+</span> Add Migration Batch
-                  </button>
-                }
-              />
-            )}
-          </div>
-        )}
-
-        {/* Add Batch Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-lg font-bold text-slate-900">Add Migration Batch</h3>
-                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-              </div>
-
-              <form onSubmit={handleCreateBatch} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Batch Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newBatch.batch_name}
-                    onChange={e => setNewBatch({ ...newBatch, batch_name: e.target.value })}
-                    placeholder="WHMCS-Migration-Batch-02"
-                    className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Migration Path *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newBatch.migration_path}
-                    onChange={e => setNewBatch({ ...newBatch, migration_path: e.target.value })}
-                    placeholder="C:\whmcs\data\imports"
-                    className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-mono focus:border-blue-600 outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Target Endpoint</label>
-                  <input
-                    type="text"
-                    value={newBatch.migration_endpoint}
-                    onChange={e => setNewBatch({ ...newBatch, migration_endpoint: e.target.value })}
-                    placeholder="https://api.jeenweb.cloud/v1/sync"
-                    className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-mono focus:border-blue-600 outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">User Count</label>
-                    <input
-                      type="number"
-                      value={newBatch.user_count}
-                      onChange={e => setNewBatch({ ...newBatch, user_count: e.target.value })}
-                      placeholder="25"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-mono focus:border-blue-600 outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Status</label>
-                    <select
-                      value={newBatch.status}
-                      onChange={e => setNewBatch({ ...newBatch, status: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    >
-                      <option value="scheduled">Scheduled</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                      <option value="failed">Failed</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={creatingBatch}
-                    className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-900 text-white hover:bg-blue-800"
-                  >
-                    {creatingBatch ? 'Creating...' : 'Create Batch'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        </div>
 
       </main>
     </div>

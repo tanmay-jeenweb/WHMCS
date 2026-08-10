@@ -45,36 +45,7 @@ const createOrderingMasterTables = async () => {
             VALUES (1, 0, 'standard_cart', 'disabled', 31, 92, 184, 366, 731, 1096, 'global', 'enabled', 'disabled', '', 'completed', 'enabled', 'disabled', 'disabled', 'disabled', 'disabled', 'disabled', 'disabled', 'disabled', 'disabled', 'cart_checkout', 10, 'disabled', 'standard')
         `);
     }
-
-    // 2. Orders Master / Templates History Table for DataTable.jsx
-    await db.execute(`
-        CREATE TABLE IF NOT EXISTS ordering_records (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            order_number VARCHAR(100) NOT NULL UNIQUE,
-            client_name VARCHAR(255) NOT NULL,
-            template_used VARCHAR(100) DEFAULT 'standard_cart',
-            payment_gateway VARCHAR(100) DEFAULT 'Credit Card',
-            total_amount DECIMAL(10,2) DEFAULT 0.00,
-            status ENUM('pending', 'active', 'completed', 'cancelled') DEFAULT 'pending',
-            notes TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        )
-    `);
-
-    // Insert sample orders if table is empty
-    const [orders] = await db.execute("SELECT COUNT(*) as count FROM ordering_records");
-    if (orders[0].count === 0) {
-        await db.execute(`
-            INSERT INTO ordering_records (order_number, client_name, template_used, payment_gateway, total_amount, status, notes)
-            VALUES 
-            ('ORD-10001', 'Acme Corporation', 'cloud_slider', 'Stripe Gateway', 149.99, 'active', 'Initial cloud hosting setup'),
-            ('ORD-10002', 'Global Tech Solutions', 'standard_cart', 'PayPal Express', 299.50, 'completed', 'Annual server renewal'),
-            ('ORD-10003', 'Apex Cloud Services', 'premium_comparison', 'Bank Transfer', 89.00, 'pending', 'Awaiting manual invoice verification')
-        `);
-    }
-
-    console.log("✅ Ordering Master tables initialized successfully.");
+    console.log("✅ Ordering Master configuration table initialized successfully.");
 };
 
 module.exports = {

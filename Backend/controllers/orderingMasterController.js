@@ -108,61 +108,7 @@ const updateOrderingConfig = async (req, res) => {
         res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to update configuration" });
     }
 };
-
-// CRUD FOR ORDER RECORDS (DataTable.jsx)
-const getAllOrderRecords = async (req, res) => {
-    try {
-        const [rows] = await db.execute("SELECT * FROM ordering_records ORDER BY id DESC");
-        res.status(200).json({ success: true, data: rows });
-    } catch (error) {
-        console.error("Get Order Records Error:", error);
-        res.status(500).json({ success: false, message: "Failed to fetch order records" });
-    }
-};
-
-const createOrderRecord = async (req, res) => {
-    try {
-        const { order_number, client_name, template_used, payment_gateway, total_amount, status, notes } = req.body;
-        if (!order_number || !client_name) {
-            return res.status(400).json({ success: false, message: "Order Number and Client Name are required" });
-        }
-
-        const [result] = await db.execute(
-            `INSERT INTO ordering_records (order_number, client_name, template_used, payment_gateway, total_amount, status, notes)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [
-                order_number,
-                client_name,
-                template_used || 'standard_cart',
-                payment_gateway || 'Credit Card',
-                total_amount || 0.00,
-                status || 'pending',
-                notes || ''
-            ]
-        );
-
-        res.status(201).json({ success: true, message: "Order record created successfully!", id: result.insertId });
-    } catch (error) {
-        console.error("Create Order Record Error:", error);
-        res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to create order record" });
-    }
-};
-
-const deleteOrderRecord = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await db.execute("DELETE FROM ordering_records WHERE id = ?", [id]);
-        res.status(200).json({ success: true, message: "Order record deleted successfully!" });
-    } catch (error) {
-        console.error("Delete Order Record Error:", error);
-        res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to delete order record" });
-    }
-};
-
 module.exports = {
     getOrderingConfig,
-    updateOrderingConfig,
-    getAllOrderRecords,
-    createOrderRecord,
-    deleteOrderRecord
+    updateOrderingConfig
 };

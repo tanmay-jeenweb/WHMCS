@@ -38,34 +38,7 @@ const createSystemSettingsTables = async () => {
             VALUES (1, '', '', '', '', '', '', 'Twenty-One', 10000, 50, 'disabled', '', '', 'enabled')
         `);
     }
-
-    // 2. Migration Batches & System History Table for DataTable.jsx
-    await db.execute(`
-        CREATE TABLE IF NOT EXISTS system_settings_batches (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            batch_name VARCHAR(255) NOT NULL,
-            migration_path VARCHAR(255) NOT NULL,
-            migration_endpoint VARCHAR(255) DEFAULT '',
-            user_count INT DEFAULT 0,
-            configuration_json TEXT,
-            schedule_time DATETIME NULL,
-            status ENUM('scheduled', 'in_progress', 'completed', 'failed') DEFAULT 'scheduled',
-            error_message TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        )
-    `);
-
-    // Insert sample migration batch if empty
-    const [batches] = await db.execute("SELECT COUNT(*) as count FROM system_settings_batches");
-    if (batches[0].count === 0) {
-        await db.execute(`
-            INSERT INTO system_settings_batches (batch_name, migration_path, migration_endpoint, user_count, status)
-            VALUES ('WHMCS-Migration-Batch-01', 'C:\\whmcs\\data\\imports', 'https://api.jeenweb.cloud/v1/sync', 25, 'scheduled')
-        `);
-    }
-
-    console.log("✅ System Configuration & Batches tables are ready.");
+    console.log("✅ System Configuration table is ready.");
 };
 
 module.exports = {

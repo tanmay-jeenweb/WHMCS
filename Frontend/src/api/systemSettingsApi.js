@@ -38,6 +38,3 @@ export const uploadSystemLogo = (formData) => apiClient.post("/system-settings/u
     headers: { "Content-Type": "multipart/form-data" }
 });
 
-export const getAllBatches = () => apiClient.get("/system-settings/batches");
-export const createBatch = (data) => apiClient.post("/system-settings/batches", data);
-export const deleteBatch = (id) => apiClient.delete(`/system-settings/batches/${id}`);
