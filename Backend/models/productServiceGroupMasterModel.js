@@ -1,6 +1,6 @@
 const db = require('../config/db.js');
 
-const createProductServiceMasterTables = async () => {
+const createProductServiceGroupMasterTables = async () => {
     // Create product_services table
     await db.execute(`
         CREATE TABLE IF NOT EXISTS product_services (
@@ -30,5 +30,5 @@ const createProductServiceMasterTables = async () => {
 };
 
 module.exports = {
-    createProductServiceMasterTables
+    createProductServiceGroupMasterTables
 };

@@ -6,7 +6,7 @@ const {
     createProductService,
     updateProductService,
     deleteProductService
-} = require('../controllers/productServiceMasterController.js');
+} = require('../controllers/productServiceGroupMasterController.js');
 
 router.get('/', verifyToken, getAllProductServices);
 router.post('/', verifyToken, createProductService);
