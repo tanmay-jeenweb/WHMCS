@@ -84,6 +84,15 @@ export default function Navbar() {
             desc: "Branding, system URLs, theme & maintenance"
         },
         {
+            name: "Products / Services Master",
+            path: "/admin/masters/products",
+            adminOnly: true,
+            icon: "fa-solid fa-boxes-stacked",
+            color: "bg-sky-50 text-sky-600 border border-sky-100/50",
+            activeColor: "bg-sky-100 text-sky-700",
+            desc: "Configure product groups, hosting plans, addons & bundles"
+        },
+        {
             name: "Ordering Master",
             path: "/admin/masters/ordering-master",
             adminOnly: true,
@@ -410,6 +419,24 @@ export default function Navbar() {
                                 >
                                     <span className="flex items-center gap-2.5 truncate mx-auto">
                                         <span className="font-semibold text-white truncate">Activity Report</span>
+                                    </span>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* 5. Products / Services Tab */}
+                        {isAdmin && (
+                            <div className="relative">
+                                <button
+                                    onClick={() => {
+                                        navigate("/admin/masters/products");
+                                    }}
+                                    className={`flex items-center justify-between px-4 py-2.5 text-sm border-r border-white/10 rounded-none focus:outline-none transition-all duration-200 font-semibold text-white cursor-pointer ${
+                                        location.pathname === "/admin/masters/products" ? "bg-white/15" : "bg-[#0056cf] hover:bg-white/5"
+                                    }`}
+                                >
+                                    <span className="flex items-center gap-2 truncate mx-auto">
+                                        <span className="font-bold text-sky-200">📦 Products / Services</span>
                                     </span>
                                 </button>
                             </div>

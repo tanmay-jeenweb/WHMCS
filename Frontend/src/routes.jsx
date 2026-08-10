@@ -19,6 +19,7 @@ import SecurityMasterPage from "./pages/admin/masters/SecurityMasterPage";
 import CustomerMasterPage from "./pages/admin/masters/CustomerMasterPage";
 import ResellerMasterPage from "./pages/admin/masters/ResellerMasterPage";
 import MasterCreatorPage from "./pages/admin/masters/MasterCreatorPage";
+import ProductsMasterPage from "./pages/admin/masters/ProductsMasterPage";
 import ActivityReport from "./pages/admin/ActivityReport";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -98,6 +99,7 @@ export default function AppRoutes() {
                 <Route path="/admin/masters/customer-master" element={<CustomerMasterPage />} />
                 <Route path="/admin/masters/reseller-master" element={<ResellerMasterPage />} />
                 <Route path="/admin/masters/master-creator" element={<MasterCreatorPage />} />
+                <Route path="/admin/masters/products" element={<ProductsMasterPage />} />
             </Route>
         </Routes>
     );
