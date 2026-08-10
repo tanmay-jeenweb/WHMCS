@@ -191,7 +191,7 @@ export default function SystemSettingsMasterPage() {
                 {/* 4. Logo File Picker & Image Upload from Device */}
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">System Logo Image (Select from Device)</label>
-                  
+
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/60 hover:border-blue-500 hover:bg-blue-50/20 transition-all">
                     <div className="w-24 h-24 rounded-xl border border-slate-200 bg-white flex items-center justify-center p-2 shadow-sm shrink-0 relative overflow-hidden group">
                       {config.logo_url ? (
@@ -306,9 +306,7 @@ export default function SystemSettingsMasterPage() {
                 </div>
               </div>
             </div>
-
             <hr className="border-slate-100" />
-
             {/* Section 3: Performance, Logs & Display Limits */}
             <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
