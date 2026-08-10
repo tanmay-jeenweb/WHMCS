@@ -84,15 +84,6 @@ export default function Navbar() {
             desc: "Branding, system URLs, theme & maintenance"
         },
         {
-            name: "Products / Services Master",
-            path: "/admin/masters/products",
-            adminOnly: true,
-            icon: "fa-solid fa-boxes-stacked",
-            color: "bg-sky-50 text-sky-600 border border-sky-100/50",
-            activeColor: "bg-sky-100 text-sky-700",
-            desc: "Configure product groups, hosting plans, addons & bundles"
-        },
-        {
             name: "Ordering Master",
             path: "/admin/masters/ordering-master",
             adminOnly: true,
@@ -145,6 +136,15 @@ export default function Navbar() {
             color: "bg-red-50 text-red-600 border border-red-100/50",
             activeColor: "bg-red-100 text-red-700",
             desc: "Captcha, IP bans, CSRF tokens & password policy"
+        },
+        {
+            name: "Product/Service Group Master",
+            path: "/admin/masters/product-services",
+            adminOnly: true,
+            icon: "fa-solid fa-box-open",
+            color: "bg-emerald-50 text-emerald-600 border border-emerald-100/50",
+            activeColor: "bg-emerald-100 text-emerald-700",
+            desc: "Configure product groups, store URLs, headlines, and taglines"
         }
     ];
 
@@ -419,24 +419,6 @@ export default function Navbar() {
                                 >
                                     <span className="flex items-center gap-2.5 truncate mx-auto">
                                         <span className="font-semibold text-white truncate">Activity Report</span>
-                                    </span>
-                                </button>
-                            </div>
-                        )}
-
-                        {/* 5. Products / Services Tab */}
-                        {isAdmin && (
-                            <div className="relative">
-                                <button
-                                    onClick={() => {
-                                        navigate("/admin/masters/products");
-                                    }}
-                                    className={`flex items-center justify-between px-4 py-2.5 text-sm border-r border-white/10 rounded-none focus:outline-none transition-all duration-200 font-semibold text-white cursor-pointer ${
-                                        location.pathname === "/admin/masters/products" ? "bg-white/15" : "bg-[#0056cf] hover:bg-white/5"
-                                    }`}
-                                >
-                                    <span className="flex items-center gap-2 truncate mx-auto">
-                                        <span className="font-bold text-sky-200">📦 Products / Services</span>
                                     </span>
                                 </button>
                             </div>
