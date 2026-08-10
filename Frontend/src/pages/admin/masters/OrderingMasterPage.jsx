@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../../components/Navbar';
-import DataTable from '../../../components/DataTable';
 import {
   getOrderingConfig,
-  updateOrderingConfig,
-  getAllOrderRecords,
-  createOrderRecord,
-  deleteOrderRecord
+  updateOrderingConfig
 } from '../../../api/orderingMasterApi';
 import toast from 'react-hot-toast';
 
 export default function OrderingMasterPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('config'); // 'config' or 'records'
 
   // General Config State (Empty initial strings so transparent placeholders display)
   const [config, setConfig] = useState({
@@ -46,21 +41,6 @@ export default function OrderingMasterPage() {
     cross_sell_style: 'standard'
   });
   const [savingConfig, setSavingConfig] = useState(false);
-
-  // DataTable State for Tab 2
-  const [orderRecords, setOrderRecords] = useState([]);
-  const [recordsLoading, setRecordsLoading] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newOrder, setNewOrder] = useState({
-    order_number: '',
-    client_name: '',
-    template_used: 'standard_cart',
-    payment_gateway: 'Credit Card',
-    total_amount: '',
-    status: 'pending',
-    notes: ''
-  });
-  const [creatingOrder, setCreatingOrder] = useState(false);
 
   const fetchConfig = async () => {
     try {
@@ -102,23 +82,8 @@ export default function OrderingMasterPage() {
     }
   };
 
-  const fetchRecords = async () => {
-    setRecordsLoading(true);
-    try {
-      const res = await getAllOrderRecords();
-      if (res.data?.success) {
-        setOrderRecords(res.data.data || []);
-      }
-    } catch (err) {
-      console.error("Failed to load order records", err);
-    } finally {
-      setRecordsLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchConfig();
-    fetchRecords();
   }, []);
 
   const handleSaveConfig = async (e) => {
@@ -134,144 +99,45 @@ export default function OrderingMasterPage() {
     }
   };
 
-  const handleCreateOrder = async (e) => {
-    e.preventDefault();
-    if (!newOrder.order_number || !newOrder.client_name) {
-      toast.error("Please fill in Order Number and Client Name.");
-      return;
-    }
-    setCreatingOrder(true);
-    try {
-      await createOrderRecord(newOrder);
-      toast.success("Order record created successfully!");
-      setShowAddModal(false);
-      setNewOrder({
-        order_number: '',
-        client_name: '',
-        template_used: 'standard_cart',
-        payment_gateway: 'Credit Card',
-        total_amount: '',
-        status: 'pending',
-        notes: ''
-      });
-      fetchRecords();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create order record.");
-    } finally {
-      setCreatingOrder(false);
-    }
-  };
-
-  const handleDeleteOrder = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this order record?")) return;
-    try {
-      await deleteOrderRecord(id);
-      toast.success("Order record deleted successfully!");
-      fetchRecords();
-    } catch (err) {
-      toast.error("Failed to delete order record.");
-    }
-  };
-
-  // DataTable Columns definition for Tab 2
-  const orderColumns = [
-    { key: 'id', label: 'ID', minWidth: '80px', sortable: true },
-    { key: 'order_number', label: 'Order #', minWidth: '160px', sortable: true, render: row => <span className="font-bold font-mono text-blue-900">{row.order_number}</span> },
-    { key: 'client_name', label: 'Client Name', minWidth: '200px', sortable: true },
-    { key: 'template_used', label: 'Template Used', minWidth: '180px', sortable: true, render: row => <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-700">{row.template_used}</span> },
-    { key: 'payment_gateway', label: 'Payment Gateway', minWidth: '160px', sortable: true },
-    { key: 'total_amount', label: 'Total Amount', minWidth: '140px', sortable: true, render: row => <span className="font-mono font-bold text-slate-800">${parseFloat(row.total_amount || 0).toFixed(2)}</span> },
-    {
-      key: 'status', label: 'Status', minWidth: '130px', sortable: true, render: row => (
-        <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide border ${
-          row.status === 'active' || row.status === 'completed'
-            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-            : row.status === 'pending'
-            ? 'bg-amber-50 text-amber-700 border-amber-200'
-            : 'bg-rose-50 text-rose-700 border-rose-200'
-        }`}>
-          {row.status}
-        </span>
-      )
-    },
-    {
-      key: 'actions', label: 'Actions', minWidth: '110px', sortable: false, render: row => (
-        <button
-          onClick={() => handleDeleteOrder(row.id)}
-          className="text-xs font-bold text-rose-600 hover:text-rose-800 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all"
-        >
-          Delete
-        </button>
-      )
-    }
-  ];
-
   return (
-    <div className="flex-1 flex flex-col bg-slate-50">
+    <div className="flex-1 bg-slate-50 font-sans text-slate-900">
       {/* Universal Header (Navbar) */}
-      <Navbar />
+      <Navbar title="CRM Admin" />
 
       {/* Main Container */}
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+      <main className="mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
 
-        {/* Tab Navigation Controls */}
-        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/admin/dashboard')} className="text-xs font-semibold text-slate-500 hover:text-blue-900 flex items-center gap-1">
-              <span>←</span> Dashboard
-            </button>
-            <span className="text-slate-300">|</span>
-            <h1 className="text-xl font-bold text-slate-900">Ordering Master</h1>
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Ordering Master</h1>
+            <p className="text-slate-500 mt-1">Configure ordering process, renewal policies, terms of service, and cross-selling settings.</p>
           </div>
-
-          <div className="flex items-center gap-2 bg-slate-200/60 p-1 rounded-xl border border-slate-300">
-            <button
-              onClick={() => setActiveTab('config')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === 'config'
-                  ? 'bg-white text-blue-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              🛒 Order General Configuration
-            </button>
-            <button
-              onClick={() => setActiveTab('records')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === 'records'
-                  ? 'bg-white text-blue-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              📦 Order Templates & History
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/admin/dashboard")}
+            className="text-slate-500 hover:text-slate-700 font-medium text-sm flex items-center gap-1 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Back to Dashboard
+          </button>
         </div>
 
-        {/* TAB 1: GENERAL ORDER CONFIGURATION FORM */}
-        {activeTab === 'config' && (
-          <form onSubmit={handleSaveConfig} className="space-y-6">
+        {/* Form Container */}
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+          <form onSubmit={handleSaveConfig} className="space-y-8">
 
             {/* Section 1: Core Order & Payment Rules */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-              <div className="border-b border-slate-100 pb-3 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                    🛒
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900">Core Order & Payment Rules</h2>
-                    <p className="text-xs text-slate-500">Set grace periods, order form templates, and payment checkout redirects.</p>
-                  </div>
+            <div className="space-y-5">
+              <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                  🛒
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={savingConfig}
-                  className="px-5 py-2 rounded-xl font-bold text-xs bg-blue-900 text-white hover:bg-blue-800 shadow transition-all flex items-center gap-1.5 shrink-0"
-                >
-                  {savingConfig ? <><span>⏳</span> Saving...</> : <><span>💾</span> Save Config</>}
-                </button>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Core Order & Payment Rules</h2>
+                  <p className="text-xs text-slate-500">Set grace periods, order form templates, and payment checkout redirects.</p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -326,8 +192,10 @@ export default function OrderingMasterPage() {
               </div>
             </div>
 
+            <hr className="border-slate-100" />
+
             {/* Section 2: On-Demand Renewals & Addon Settings */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">
@@ -437,8 +305,10 @@ export default function OrderingMasterPage() {
               </div>
             </div>
 
+            <hr className="border-slate-100" />
+
             {/* Section 3: Terms of Service & Security Toggles */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm">
                   🛡️
@@ -597,8 +467,10 @@ export default function OrderingMasterPage() {
               </div>
             </div>
 
+            <hr className="border-slate-100" />
+
             {/* Section 4: Product Cross-Selling Options */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
@@ -666,164 +538,19 @@ export default function OrderingMasterPage() {
               </div>
             </div>
 
-            {/* Submit Action */}
-            <div className="flex justify-end pt-2">
+            {/* Bottom Form Submit Action */}
+            <div className="pt-4">
               <button
                 type="submit"
                 disabled={savingConfig}
-                className="px-6 py-2.5 rounded-xl font-bold text-sm bg-blue-900 text-white hover:bg-blue-800 shadow-md transition-all flex items-center gap-2"
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#0056cf] hover:bg-[#0040a1] focus:ring-2 focus:ring-offset-2 focus:ring-[#0056cf] disabled:opacity-50 transition-colors"
               >
-                {savingConfig ? <><span>⏳</span> Saving Configuration...</> : <><span>💾</span> Save Configuration Changes</>}
+                {savingConfig ? "Saving Configuration..." : "Save Configuration Changes"}
               </button>
             </div>
 
           </form>
-        )}
-
-        {/* TAB 2: ORDER RECORDS & TEMPLATES HISTORY (DataTable.jsx) */}
-        {activeTab === 'records' && (
-          <div className="space-y-6">
-            <DataTable
-              tableId="ordering_master_records"
-              title="Order Records & Templates History"
-              data={orderRecords}
-              columns={orderColumns}
-              loading={recordsLoading}
-              searchPlaceholder="Search orders by number, client, gateway..."
-              actionButton={
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-blue-900 px-4 text-sm font-semibold text-white transition-all hover:bg-blue-800 shadow-md"
-                >
-                  <span>+</span> Add New Order Record
-                </button>
-              }
-            />
-          </div>
-        )}
-
-        {/* Add Order Record Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-lg font-bold text-slate-900">Add New Order Record</h3>
-                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-              </div>
-
-              <form onSubmit={handleCreateOrder} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Order Number *</label>
-                    <input
-                      type="text"
-                      required
-                      value={newOrder.order_number}
-                      onChange={e => setNewOrder({ ...newOrder, order_number: e.target.value })}
-                      placeholder="ORD-10004"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-mono focus:border-blue-600 outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Client Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={newOrder.client_name}
-                      onChange={e => setNewOrder({ ...newOrder, client_name: e.target.value })}
-                      placeholder="Enterprise Client Ltd"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Order Template</label>
-                    <select
-                      value={newOrder.template_used}
-                      onChange={e => setNewOrder({ ...newOrder, template_used: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    >
-                      <option value="standard_cart">Standard Cart</option>
-                      <option value="cloud_slider">Cloud Slider</option>
-                      <option value="nexus_cart">Nexus Cart</option>
-                      <option value="premium_comparison">Premium Comparison</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Payment Gateway</label>
-                    <input
-                      type="text"
-                      value={newOrder.payment_gateway}
-                      onChange={e => setNewOrder({ ...newOrder, payment_gateway: e.target.value })}
-                      placeholder="Stripe Gateway"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Total Amount ($)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newOrder.total_amount}
-                      onChange={e => setNewOrder({ ...newOrder, total_amount: e.target.value })}
-                      placeholder="199.99"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-mono focus:border-blue-600 outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Status</label>
-                    <select
-                      value={newOrder.status}
-                      onChange={e => setNewOrder({ ...newOrder, status: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="active">Active</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Notes / Remarks</label>
-                  <textarea
-                    rows={2}
-                    value={newOrder.notes}
-                    onChange={e => setNewOrder({ ...newOrder, notes: e.target.value })}
-                    placeholder="Enter order setup notes..."
-                    className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={creatingOrder}
-                    className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-900 text-white hover:bg-blue-800"
-                  >
-                    {creatingOrder ? 'Saving...' : 'Create Order Record'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        </div>
 
       </main>
     </div>

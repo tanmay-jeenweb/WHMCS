@@ -75,7 +75,7 @@ export default function Navbar() {
             desc: "Configure access roles & permissions"
         },
         {
-            name: "System Settings Master",
+            name: "General Setting Master",
             path: "/admin/masters/system-settings",
             adminOnly: true,
             icon: "fa-solid fa-sliders",

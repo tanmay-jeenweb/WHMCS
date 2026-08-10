@@ -34,6 +34,3 @@ apiClient.interceptors.request.use(async (config) => {
 export const getOrderingConfig = () => apiClient.get("/ordering-master/config");
 export const updateOrderingConfig = (data) => apiClient.put("/ordering-master/config", data);
 
-export const getAllOrderRecords = () => apiClient.get("/ordering-master/records");
-export const createOrderRecord = (data) => apiClient.post("/ordering-master/records", data);
-export const deleteOrderRecord = (id) => apiClient.delete(`/ordering-master/records/${id}`);
