@@ -1,22 +1,27 @@
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { logoutUser } from "../api/authApi";
 import { usePermission } from "../context/PermissionContext";
 
-
 export default function Navbar() {
+    const [isOpen, setIsOpen] = useState(false);
+    const [isPortalMastersOpen, setIsPortalMastersOpen] = useState(false);
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const [isOpen, setIsOpen] = useState(false);
-    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const { hasPermission } = usePermission();
-    const isAdmin = user.role === "admin" || user.role === "super admin";
+
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const userRoleLower = (user.role || "").toLowerCase();
+    const isAdmin = userRoleLower === "admin" || userRoleLower === "super admin" || userRoleLower.includes("admin");
 
     useEffect(() => {
         const handleOutsideClick = (e) => {
             if (isOpen && !e.target.closest("#masters-dropdown")) {
                 setIsOpen(false);
+            }
+            if (isPortalMastersOpen && !e.target.closest("#portal-masters-dropdown")) {
+                setIsPortalMastersOpen(false);
             }
             if (isProfileOpen && !e.target.closest("#profile-dropdown")) {
                 setIsProfileOpen(false);
@@ -24,10 +29,16 @@ export default function Navbar() {
         };
         document.addEventListener("click", handleOutsideClick);
         return () => document.removeEventListener("click", handleOutsideClick);
-    }, [isOpen, isProfileOpen]);
+    }, [isOpen, isPortalMastersOpen, isProfileOpen]);
 
     const toggleMasters = () => {
         setIsOpen(!isOpen);
+        if (isPortalMastersOpen) setIsPortalMastersOpen(false);
+    };
+
+    const togglePortalMasters = () => {
+        setIsPortalMastersOpen(!isPortalMastersOpen);
+        if (isOpen) setIsOpen(false);
     };
 
     const handleLogout = async () => {
@@ -43,6 +54,7 @@ export default function Navbar() {
         navigate("/");
     };
 
+    // Main Masters List
     const allMasters = [
         {
             name: "User Master",
@@ -61,6 +73,97 @@ export default function Navbar() {
             color: "bg-violet-50 text-violet-600 border border-violet-100/50",
             activeColor: "bg-violet-100 text-violet-700",
             desc: "Configure access roles & permissions"
+        },
+        {
+            name: "System Settings Master",
+            path: "/admin/masters/system-settings",
+            adminOnly: true,
+            icon: "fa-solid fa-sliders",
+            color: "bg-blue-50 text-blue-600 border border-blue-100/50",
+            activeColor: "bg-blue-100 text-blue-700",
+            desc: "Branding, system URLs, theme & maintenance"
+        },
+        {
+            name: "Ordering Master",
+            path: "/admin/masters/ordering-master",
+            adminOnly: true,
+            icon: "fa-solid fa-cart-shopping",
+            color: "bg-amber-50 text-amber-600 border border-amber-100/50",
+            activeColor: "bg-amber-100 text-amber-700",
+            desc: "Templates, renewals, TOS & cross-selling"
+        },
+        {
+            name: "Domain Master",
+            path: "/admin/masters/domain-master",
+            adminOnly: true,
+            icon: "fa-solid fa-globe",
+            color: "bg-teal-50 text-teal-600 border border-teal-100/50",
+            activeColor: "bg-teal-100 text-teal-700",
+            desc: "Registrations, renewals, NS & contact defaults"
+        },
+        {
+            name: "Email Master",
+            path: "/admin/masters/email-master",
+            adminOnly: true,
+            icon: "fa-solid fa-envelope",
+            color: "bg-purple-50 text-purple-600 border border-purple-100/50",
+            activeColor: "bg-purple-100 text-purple-700",
+            desc: "Mail providers, signatures, HTML CSS templates"
+        },
+        {
+            name: "Support Master",
+            path: "/admin/masters/support-master",
+            adminOnly: true,
+            icon: "fa-solid fa-headset",
+            color: "bg-rose-50 text-rose-600 border border-rose-100/50",
+            activeColor: "bg-rose-100 text-rose-700",
+            desc: "Ticket reply rules, gravatars & support email"
+        },
+        {
+            name: "Invoice Master",
+            path: "/admin/masters/invoice-master",
+            adminOnly: true,
+            icon: "fa-solid fa-file-invoice-dollar",
+            color: "bg-emerald-50 text-emerald-600 border border-emerald-100/50",
+            activeColor: "bg-emerald-100 text-emerald-700",
+            desc: "Generation rules, late fees, tax & starting IDs"
+        },
+        {
+            name: "Security Master",
+            path: "/admin/masters/security-master",
+            adminOnly: true,
+            icon: "fa-solid fa-shield-halved",
+            color: "bg-red-50 text-red-600 border border-red-100/50",
+            activeColor: "bg-red-100 text-red-700",
+            desc: "Captcha, IP bans, CSRF tokens & password policy"
+        }
+    ];
+
+    // Dedicated Portal & Accounts Masters
+    const portalMasters = [
+        {
+            name: "Customer Master",
+            path: "/admin/masters/customer-master",
+            adminOnly: true,
+            icon: "fa-solid fa-user-gear",
+            color: "bg-indigo-50 text-indigo-600 border border-indigo-100/50",
+            desc: "Client portal permissions, views & customer account IDs"
+        },
+        {
+            name: "Reseller Master",
+            path: "/admin/masters/reseller-master",
+            adminOnly: true,
+            icon: "fa-solid fa-handshake-angle",
+            color: "bg-amber-50 text-amber-600 border border-amber-100/50",
+            desc: "Reseller tiers, commissions, whitelabeling & reseller account IDs"
+        },
+        {
+            name: "Master Creator Master",
+            path: "/admin/masters/master-creator",
+            adminOnly: true,
+            icon: "fa-solid fa-wand-magic-sparkles",
+            color: "bg-sky-50 text-sky-600 border border-sky-100/50",
+            desc: "Dynamic master creator & field configurator engine"
         }
     ];
 
@@ -152,17 +255,75 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {/* Second Row: Navigation */}
+            {/* Second Row: Navigation Tabs */}
             {user.role && (
-                <div className="bg-[#0056cf] border-t border-slate-200 px-4 sm:px-6 lg:px-8 py-0 flex flex-wrap items-center gap-4">
+                <div className="bg-[#0056cf] border-t border-slate-200 px-4 sm:px-6 lg:px-8 py-0 flex flex-wrap items-center gap-0">
                     <div className="flex items-center relative z-30" id="custom-nav-dropdown">
-                        {/* User Dashboard Tab */}
+                        
+                        {/* 1. Customer & Reseller Masters Dropdown (NEW SECTION ON LEFT) */}
+                        {isAdmin && (
+                            <div className="relative" id="portal-masters-dropdown">
+                                <button
+                                    onClick={togglePortalMasters}
+                                    className={`flex items-center justify-between px-4 py-2.5 text-sm border-r border-l border-white/10 rounded-none focus:outline-none transition-all duration-200 font-semibold text-white cursor-pointer ${
+                                        isPortalMastersOpen ? "bg-white/15" : "bg-[#0056cf] hover:bg-white/5"
+                                    }`}
+                                >
+                                    <span className="flex items-center gap-2 truncate">
+                                        <span className="font-bold text-amber-300">👑 Client & Reseller Masters</span>
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={2.5}
+                                            stroke="currentColor"
+                                            className={`w-3.5 h-3.5 text-amber-300 transition-transform duration-200 ${isPortalMastersOpen ? "rotate-180" : ""}`}
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                        </svg>
+                                    </span>
+                                </button>
+
+                                {isPortalMastersOpen && (
+                                    <div className="absolute left-0 top-full mt-1.5 w-96 bg-white border border-slate-200 rounded-2xl shadow-xl p-3.5 z-50 origin-top animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div className="space-y-1.5">
+                                            {portalMasters.map((m, idx) => {
+                                                const isActive = location.pathname === m.path;
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => {
+                                                            navigate(m.path);
+                                                            setIsPortalMastersOpen(false);
+                                                        }}
+                                                        className={`relative group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer text-left w-full border border-transparent ${isActive
+                                                            ? "bg-blue-50 text-blue-900 font-bold border-blue-100"
+                                                            : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                                                            }`}
+                                                    >
+                                                        <div className={`flex items-center justify-center w-8 h-8 rounded-lg shadow-sm shrink-0 ${m.color}`}>
+                                                            <i className={`${m.icon} text-sm`}></i>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-bold text-slate-900">{m.name}</p>
+                                                            <p className="text-[11px] text-slate-500 leading-tight mt-0.5">{m.desc}</p>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 2. User Dashboard Tab */}
                         <div className="relative">
                             <button
                                 onClick={() => {
                                     navigate("/user/home");
                                 }}
-                                className={`flex items-center justify-between w-40 px-4 py-2.5 text-sm border-r border-l border-white/10 rounded-none focus:outline-none transition-all duration-200 font-semibold text-white cursor-pointer ${
+                                className={`flex items-center justify-between w-40 px-4 py-2.5 text-sm border-r border-white/10 rounded-none focus:outline-none transition-all duration-200 font-semibold text-white cursor-pointer ${
                                     location.pathname === "/user/home" ? "bg-white/15" : "bg-[#0056cf] hover:bg-white/5"
                                 }`}
                             >
@@ -172,7 +333,7 @@ export default function Navbar() {
                             </button>
                         </div>
 
-                        {/* Masters Dropdown */}
+                        {/* 3. Masters Dropdown */}
                         {availableMasters.length > 0 && (
                             <div className="relative" id="masters-dropdown">
                                 <button
@@ -236,8 +397,8 @@ export default function Navbar() {
                             </div>
                         )}
 
-                        {/* Activity Report Tab */}
-                        {(isAdmin || hasPermission("activity_report", "read")) && (
+                        {/* 4. Activity Report Tab */}
+                        {hasPermission("activity_report", "read") && (
                             <div className="relative">
                                 <button
                                     onClick={() => {
