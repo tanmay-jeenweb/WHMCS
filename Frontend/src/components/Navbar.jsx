@@ -145,6 +145,15 @@ export default function Navbar() {
             color: "bg-emerald-50 text-emerald-600 border border-emerald-100/50",
             activeColor: "bg-emerald-100 text-emerald-700",
             desc: "Configure product groups, store URLs, headlines, and taglines"
+        },
+        {
+            name: "Product/Service Master",
+            path: "/admin/masters/product-master",
+            adminOnly: true,
+            icon: "fa-solid fa-cubes",
+            color: "bg-teal-50 text-teal-600 border border-teal-100/50",
+            activeColor: "bg-teal-100 text-teal-700",
+            desc: "Configure individual products, product types, group links and server modules"
         }
     ];
 
