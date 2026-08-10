@@ -34,6 +34,3 @@ apiClient.interceptors.request.use(async (config) => {
 export const getDomainConfig = () => apiClient.get("/domain-master/config");
 export const updateDomainConfig = (data) => apiClient.put("/domain-master/config", data);
 
-export const getAllDomainRecords = () => apiClient.get("/domain-master/records");
-export const createDomainRecord = (data) => apiClient.post("/domain-master/records", data);
-export const deleteDomainRecord = (id) => apiClient.delete(`/domain-master/records/${id}`);

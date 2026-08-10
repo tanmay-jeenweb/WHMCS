@@ -34,6 +34,3 @@ apiClient.interceptors.request.use(async (config) => {
 export const getSecurityConfig = () => apiClient.get("/security-master/config");
 export const updateSecurityConfig = (data) => apiClient.put("/security-master/config", data);
 
-export const getAllSecurityRecords = () => apiClient.get("/security-master/records");
-export const createSecurityRecord = (data) => apiClient.post("/security-master/records", data);
-export const deleteSecurityRecord = (id) => apiClient.delete(`/security-master/records/${id}`);

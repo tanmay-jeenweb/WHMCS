@@ -1,22 +1,39 @@
 const db = require('../config/db.js');
 
 const createInvoiceMasterTables = async () => {
+    // Drop legacy structures to re-create with complete field schema
+    await db.execute("DROP TABLE IF EXISTS invoice_config");
+    await db.execute("DROP TABLE IF EXISTS invoice_records");
+
     // 1. General Invoice Configuration Table
     await db.execute(`
-        CREATE TABLE IF NOT EXISTS invoice_config (
+        CREATE TABLE invoice_config (
             id INT PRIMARY KEY DEFAULT 1,
-            continuous_invoicing ENUM('enabled', 'disabled') DEFAULT 'disabled',
-            invoice_due_days INT DEFAULT 14,
-            payment_reminder_emails ENUM('enabled', 'disabled') DEFAULT 'enabled',
+            continuous_invoice_generation ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            enable_metric_usage_invoicing ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            enable_pdf_invoices ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            pdf_paper_size VARCHAR(50) DEFAULT 'A4',
+            pdf_font_family VARCHAR(50) DEFAULT 'Helvetica',
+            custom_pdf_font VARCHAR(100) DEFAULT '',
+            store_client_data_snapshot ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            enable_mass_payment ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            clients_choose_gateway ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            group_similar_line_items ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            cancellation_request_handling ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            automatic_subscription_management ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            enable_proforma_invoicing ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            sequential_paid_invoice_numbering ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            sequential_invoice_number_format VARCHAR(255) DEFAULT '{NUMBER}',
+            next_paid_invoice_number INT DEFAULT 1,
             late_fee_type ENUM('percentage', 'fixed') DEFAULT 'percentage',
-            late_fee_amount DECIMAL(10,2) DEFAULT 0.00,
+            late_fee_amount DECIMAL(10,2) DEFAULT 10.00,
             late_fee_minimum DECIMAL(10,2) DEFAULT 0.00,
-            auto_cancellation_days INT DEFAULT 30,
-            tax_enabled ENUM('enabled', 'disabled') DEFAULT 'disabled',
-            tax_type ENUM('exclusive', 'inclusive') DEFAULT 'exclusive',
-            tax_name VARCHAR(100) DEFAULT 'VAT',
-            tax_rate DECIMAL(5,2) DEFAULT 0.00,
-            invoice_starting_number INT DEFAULT 10001,
+            accepted_credit_card_types TEXT,
+            issue_number_start_date ENUM('enabled', 'disabled') DEFAULT 'disabled',
+            invoice_incrementation INT DEFAULT 1,
+            credit_note_number_incrementation INT DEFAULT 1,
+            debit_note_number_incrementation INT DEFAULT 1,
+            invoice_starting_number INT DEFAULT 1,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )
     `);
@@ -26,39 +43,12 @@ const createInvoiceMasterTables = async () => {
     if (rows.length === 0) {
         await db.execute(`
             INSERT INTO invoice_config 
-            (id, continuous_invoicing, invoice_due_days, payment_reminder_emails, late_fee_type, late_fee_amount, late_fee_minimum, auto_cancellation_days, tax_enabled, tax_type, tax_name, tax_rate, invoice_starting_number)
-            VALUES (1, 'disabled', 14, 'enabled', 'percentage', 0.00, 0.00, 30, 'disabled', 'exclusive', 'VAT', 0.00, 10001)
+            (id, continuous_invoice_generation, enable_metric_usage_invoicing, enable_pdf_invoices, pdf_paper_size, pdf_font_family, custom_pdf_font, store_client_data_snapshot, enable_mass_payment, clients_choose_gateway, group_similar_line_items, cancellation_request_handling, automatic_subscription_management, enable_proforma_invoicing, sequential_paid_invoice_numbering, sequential_invoice_number_format, next_paid_invoice_number, late_fee_type, late_fee_amount, late_fee_minimum, accepted_credit_card_types, issue_number_start_date, invoice_incrementation, credit_note_number_incrementation, debit_note_number_incrementation, invoice_starting_number)
+            VALUES (1, 'disabled', 'disabled', 'disabled', 'A4', 'Helvetica', '', 'disabled', 'disabled', 'disabled', 'disabled', 'disabled', 'disabled', 'disabled', 'disabled', '{NUMBER}', 1, 'percentage', 10.00, 0.00, 'Visa,MasterCard,Discover,American Express,JCB', 'disabled', 1, 1, 1, 1)
         `);
     }
 
-    // 2. Invoice Records Table for DataTable.jsx
-    await db.execute(`
-        CREATE TABLE IF NOT EXISTS invoice_records (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            invoice_number VARCHAR(100) NOT NULL UNIQUE,
-            client_name VARCHAR(255) NOT NULL,
-            invoice_date DATE,
-            due_date DATE,
-            total_amount DECIMAL(10,2) DEFAULT 0.00,
-            status ENUM('paid', 'unpaid', 'cancelled', 'refunded') DEFAULT 'unpaid',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        )
-    `);
-
-    // Insert sample invoice records if table is empty
-    const [records] = await db.execute("SELECT COUNT(*) as count FROM invoice_records");
-    if (records[0].count === 0) {
-        await db.execute(`
-            INSERT INTO invoice_records (invoice_number, client_name, invoice_date, due_date, total_amount, status)
-            VALUES 
-            ('INV-10001', 'Acme Corporation', '2026-02-01', '2026-02-15', 149.99, 'paid'),
-            ('INV-10002', 'Global Tech Solutions', '2026-02-05', '2026-02-19', 299.50, 'unpaid'),
-            ('INV-10003', 'Apex Cloud Services', '2026-01-10', '2026-01-24', 89.00, 'paid')
-        `);
-    }
-
-    console.log("✅ Invoice Master tables initialized successfully.");
+    console.log("✅ Invoice Master configuration table initialized and restructured successfully.");
 };
 
 module.exports = {

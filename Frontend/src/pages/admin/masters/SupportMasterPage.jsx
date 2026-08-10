@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../../components/Navbar';
-import DataTable from '../../../components/DataTable';
 import {
   getSupportConfig,
-  updateSupportConfig,
-  getAllSupportRecords,
-  createSupportRecord,
-  deleteSupportRecord
+  updateSupportConfig
 } from '../../../api/supportMasterApi';
 import toast from 'react-hot-toast';
 
 export default function SupportMasterPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('config'); // 'config' or 'records'
 
   // General Support Config State (Clean empty initial values)
   const [config, setConfig] = useState({
@@ -34,20 +29,6 @@ export default function SupportMasterPage() {
     allowed_attachment_types: ''
   });
   const [savingConfig, setSavingConfig] = useState(false);
-
-  // DataTable State for Tab 2
-  const [supportRecords, setSupportRecords] = useState([]);
-  const [recordsLoading, setRecordsLoading] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newTicket, setNewTicket] = useState({
-    ticket_number: '',
-    department: 'Technical Support',
-    subject: '',
-    client_name: '',
-    priority: 'Medium',
-    status: 'Open'
-  });
-  const [creatingTicket, setCreatingTicket] = useState(false);
 
   const fetchConfig = async () => {
     try {
@@ -77,23 +58,8 @@ export default function SupportMasterPage() {
     }
   };
 
-  const fetchRecords = async () => {
-    setRecordsLoading(true);
-    try {
-      const res = await getAllSupportRecords();
-      if (res.data?.success) {
-        setSupportRecords(res.data.data || []);
-      }
-    } catch (err) {
-      console.error("Failed to load support records", err);
-    } finally {
-      setRecordsLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchConfig();
-    fetchRecords();
   }, []);
 
   const handleSaveConfig = async (e) => {
@@ -109,157 +75,45 @@ export default function SupportMasterPage() {
     }
   };
 
-  const handleCreateTicket = async (e) => {
-    e.preventDefault();
-    if (!newTicket.ticket_number || !newTicket.subject || !newTicket.client_name) {
-      toast.error("Please fill in Ticket Number, Subject, and Client Name.");
-      return;
-    }
-    setCreatingTicket(true);
-    try {
-      await createSupportRecord(newTicket);
-      toast.success("Support ticket record created successfully!");
-      setShowAddModal(false);
-      setNewTicket({
-        ticket_number: '',
-        department: 'Technical Support',
-        subject: '',
-        client_name: '',
-        priority: 'Medium',
-        status: 'Open'
-      });
-      fetchRecords();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create support ticket record.");
-    } finally {
-      setCreatingTicket(false);
-    }
-  };
-
-  const handleDeleteTicket = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this ticket record?")) return;
-    try {
-      await deleteSupportRecord(id);
-      toast.success("Support ticket record deleted successfully!");
-      fetchRecords();
-    } catch (err) {
-      toast.error("Failed to delete ticket record.");
-    }
-  };
-
-  // DataTable Columns definition for Tab 2
-  const supportColumns = [
-    { key: 'id', label: 'ID', minWidth: '80px', sortable: true },
-    { key: 'ticket_number', label: 'Ticket #', minWidth: '150px', sortable: true, render: row => <span className="font-bold font-mono text-blue-900">{row.ticket_number}</span> },
-    { key: 'subject', label: 'Subject', minWidth: '220px', sortable: true, render: row => <span className="font-bold text-slate-900">{row.subject}</span> },
-    { key: 'client_name', label: 'Client Name', minWidth: '180px', sortable: true },
-    { key: 'department', label: 'Department', minWidth: '180px', sortable: true, render: row => <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-700">{row.department}</span> },
-    {
-      key: 'priority', label: 'Priority', minWidth: '120px', sortable: true, render: row => (
-        <span className={`px-2.5 py-0.5 rounded text-xs font-bold ${
-          row.priority === 'High' || row.priority === 'Urgent'
-            ? 'text-rose-700 bg-rose-50 border border-rose-200'
-            : row.priority === 'Medium'
-            ? 'text-amber-700 bg-amber-50 border border-amber-200'
-            : 'text-emerald-700 bg-emerald-50 border border-emerald-200'
-        }`}>
-          {row.priority}
-        </span>
-      )
-    },
-    {
-      key: 'status', label: 'Status', minWidth: '130px', sortable: true, render: row => (
-        <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide border ${
-          row.status === 'Open'
-            ? 'bg-rose-50 text-rose-700 border-rose-200'
-            : row.status === 'Answered'
-            ? 'bg-sky-50 text-sky-700 border-sky-200'
-            : row.status === 'Customer-Reply'
-            ? 'bg-amber-50 text-amber-700 border-amber-200'
-            : 'bg-slate-100 text-slate-600 border-slate-200'
-        }`}>
-          {row.status}
-        </span>
-      )
-    },
-    {
-      key: 'actions', label: 'Actions', minWidth: '110px', sortable: false, render: row => (
-        <button
-          onClick={() => handleDeleteTicket(row.id)}
-          className="text-xs font-bold text-rose-600 hover:text-rose-800 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all"
-        >
-          Delete
-        </button>
-      )
-    }
-  ];
-
   return (
-    <div className="flex-1 flex flex-col bg-slate-50">
+    <div className="flex-1 bg-slate-50 font-sans text-slate-900">
       {/* Universal Header (Navbar) */}
-      <Navbar />
+      <Navbar title="CRM Admin" />
 
       {/* Main Container */}
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+      <main className="mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
 
-        {/* Tab Navigation Controls */}
-        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/admin/dashboard')} className="text-xs font-semibold text-slate-500 hover:text-blue-900 flex items-center gap-1">
-              <span>←</span> Dashboard
-            </button>
-            <span className="text-slate-300">|</span>
-            <h1 className="text-xl font-bold text-slate-900">Support Master</h1>
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Support Master</h1>
+            <p className="text-slate-500 mt-1">Configure ticket response ordering, attachments, signatures, and email routing properties.</p>
           </div>
-
-          <div className="flex items-center gap-2 bg-slate-200/60 p-1 rounded-xl border border-slate-300">
-            <button
-              onClick={() => setActiveTab('config')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === 'config'
-                  ? 'bg-white text-blue-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              🎫 Support & Ticket Email Configuration
-            </button>
-            <button
-              onClick={() => setActiveTab('records')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === 'records'
-                  ? 'bg-white text-blue-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              📦 Support Tickets & History
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/admin/dashboard")}
+            className="text-slate-500 hover:text-slate-700 font-medium text-sm flex items-center gap-1 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Back to Dashboard
+          </button>
         </div>
 
-        {/* TAB 1: SUPPORT & EMAIL CONFIGURATION FORM */}
-        {activeTab === 'config' && (
-          <form onSubmit={handleSaveConfig} className="space-y-6">
+        {/* Form Container */}
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+          <form onSubmit={handleSaveConfig} className="space-y-8">
 
             {/* Section 1: Ticket Preferences & Attachment Settings */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-              <div className="border-b border-slate-100 pb-3 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                    🎫
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900">Ticket Preferences & Attachments</h2>
-                    <p className="text-xs text-slate-500">Configure ticket reply order, gravatar displays, and allowed attachment file types.</p>
-                  </div>
+            <div className="space-y-5">
+              <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                  🎫
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={savingConfig}
-                  className="px-5 py-2 rounded-xl font-bold text-xs bg-blue-900 text-white hover:bg-blue-800 shadow transition-all flex items-center gap-1.5 shrink-0"
-                >
-                  {savingConfig ? <><span>⏳</span> Saving...</> : <><span>💾</span> Save Config</>}
-                </button>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Ticket Preferences & Attachments</h2>
+                  <p className="text-xs text-slate-500">Configure ticket reply order, gravatar displays, and allowed attachment file types.</p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -305,8 +159,10 @@ export default function SupportMasterPage() {
               </div>
             </div>
 
+            <hr className="border-slate-100" />
+
             {/* Section 2: Core Support Mail Transport & Senders */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">
                   ✉️
@@ -426,8 +282,10 @@ export default function SupportMasterPage() {
               </div>
             </div>
 
+            <hr className="border-slate-100" />
+
             {/* Section 3: Support Email Signatures & HTML Styling */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm">
                   🎨
@@ -487,154 +345,19 @@ export default function SupportMasterPage() {
               </div>
             </div>
 
-            {/* Submit Action */}
-            <div className="flex justify-end pt-2">
+            {/* Bottom Form Submit Action */}
+            <div className="pt-4">
               <button
                 type="submit"
                 disabled={savingConfig}
-                className="px-6 py-2.5 rounded-xl font-bold text-sm bg-blue-900 text-white hover:bg-blue-800 shadow-md transition-all flex items-center gap-2"
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#0056cf] hover:bg-[#0040a1] focus:ring-2 focus:ring-offset-2 focus:ring-[#0056cf] disabled:opacity-50 transition-colors"
               >
-                {savingConfig ? <><span>⏳</span> Saving Configuration...</> : <><span>💾</span> Save Support Configuration</>}
+                {savingConfig ? "Saving Configuration..." : "Save Configuration Changes"}
               </button>
             </div>
 
           </form>
-        )}
-
-        {/* TAB 2: SUPPORT TICKETS & HISTORY (DataTable.jsx) */}
-        {activeTab === 'records' && (
-          <div className="space-y-6">
-            <DataTable
-              tableId="support_master_records"
-              title="Support Tickets & Department History"
-              data={supportRecords}
-              columns={supportColumns}
-              loading={recordsLoading}
-              searchPlaceholder="Search tickets by number, subject, client, status..."
-              actionButton={
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-blue-900 px-4 text-sm font-semibold text-white transition-all hover:bg-blue-800 shadow-md"
-                >
-                  <span>+</span> Open New Support Ticket
-                </button>
-              }
-            />
-          </div>
-        )}
-
-        {/* Add Ticket Record Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-lg font-bold text-slate-900">Open New Support Ticket</h3>
-                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-              </div>
-
-              <form onSubmit={handleCreateTicket} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Ticket Number *</label>
-                    <input
-                      type="text"
-                      required
-                      value={newTicket.ticket_number}
-                      onChange={e => setNewTicket({ ...newTicket, ticket_number: e.target.value })}
-                      placeholder="TCK-88004"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-mono focus:border-blue-600 outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Client Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={newTicket.client_name}
-                      onChange={e => setNewTicket({ ...newTicket, client_name: e.target.value })}
-                      placeholder="Acme Corporation"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Subject *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newTicket.subject}
-                    onChange={e => setNewTicket({ ...newTicket, subject: e.target.value })}
-                    placeholder="Database Connection Timeout Inquiry"
-                    className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Department</label>
-                    <select
-                      value={newTicket.department}
-                      onChange={e => setNewTicket({ ...newTicket, department: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-xs focus:border-blue-600 outline-none"
-                    >
-                      <option value="Technical Support">Technical Support</option>
-                      <option value="Billing Department">Billing Department</option>
-                      <option value="Sales & Presales">Sales & Presales</option>
-                      <option value="Domain Registrar">Domain Registrar</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Priority</label>
-                    <select
-                      value={newTicket.priority}
-                      onChange={e => setNewTicket({ ...newTicket, priority: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-xs focus:border-blue-600 outline-none"
-                    >
-                      <option value="Low">Low</option>
-                      <option value="Medium">Medium</option>
-                      <option value="High">High</option>
-                      <option value="Urgent">Urgent</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Status</label>
-                    <select
-                      value={newTicket.status}
-                      onChange={e => setNewTicket({ ...newTicket, status: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-xs focus:border-blue-600 outline-none"
-                    >
-                      <option value="Open">Open</option>
-                      <option value="Answered">Answered</option>
-                      <option value="Customer-Reply">Customer-Reply</option>
-                      <option value="Closed">Closed</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={creatingTicket}
-                    className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-900 text-white hover:bg-blue-800"
-                  >
-                    {creatingTicket ? 'Opening...' : 'Create Ticket Record'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        </div>
 
       </main>
     </div>

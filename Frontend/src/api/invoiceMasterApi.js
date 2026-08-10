@@ -34,6 +34,3 @@ apiClient.interceptors.request.use(async (config) => {
 export const getInvoiceConfig = () => apiClient.get("/invoice-master/config");
 export const updateInvoiceConfig = (data) => apiClient.put("/invoice-master/config", data);
 
-export const getAllInvoiceRecords = () => apiClient.get("/invoice-master/records");
-export const createInvoiceRecord = (data) => apiClient.post("/invoice-master/records", data);
-export const deleteInvoiceRecord = (id) => apiClient.delete(`/invoice-master/records/${id}`);

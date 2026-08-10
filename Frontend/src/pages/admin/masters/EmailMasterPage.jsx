@@ -1,25 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../../components/Navbar';
-import DataTable from '../../../components/DataTable';
 import {
   getEmailConfig,
-  updateEmailConfig,
-  getAllEmailRecords,
-  createEmailRecord,
-  deleteEmailRecord
+  updateEmailConfig
 } from '../../../api/emailMasterApi';
 import toast from 'react-hot-toast';
 
 export default function EmailMasterPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('config'); // 'config' or 'records'
 
   // General Email Config State (Clean empty initial values)
   const [config, setConfig] = useState({
     mail_provider: 'PHP Mail',
     disable_email_sending: 'disabled',
-    disable_rfc3834_headers: 'disabled',
     global_signature: '',
     global_css: '',
     client_email_header: '',
@@ -32,19 +26,6 @@ export default function EmailMasterPage() {
   });
   const [savingConfig, setSavingConfig] = useState(false);
 
-  // DataTable State for Tab 2
-  const [emailRecords, setEmailRecords] = useState([]);
-  const [recordsLoading, setRecordsLoading] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newEmail, setNewEmail] = useState({
-    subject: '',
-    recipient_name: '',
-    recipient_email: '',
-    email_type: 'System Notice',
-    status: 'sent'
-  });
-  const [creatingRecord, setCreatingRecord] = useState(false);
-
   const fetchConfig = async () => {
     try {
       const res = await getEmailConfig();
@@ -53,7 +34,6 @@ export default function EmailMasterPage() {
         setConfig({
           mail_provider: data.mail_provider || 'PHP Mail',
           disable_email_sending: data.disable_email_sending || 'disabled',
-          disable_rfc3834_headers: data.disable_rfc3834_headers || 'disabled',
           global_signature: data.global_signature || '',
           global_css: data.global_css || '',
           client_email_header: data.client_email_header || '',
@@ -70,23 +50,8 @@ export default function EmailMasterPage() {
     }
   };
 
-  const fetchRecords = async () => {
-    setRecordsLoading(true);
-    try {
-      const res = await getAllEmailRecords();
-      if (res.data?.success) {
-        setEmailRecords(res.data.data || []);
-      }
-    } catch (err) {
-      console.error("Failed to load email records", err);
-    } finally {
-      setRecordsLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchConfig();
-    fetchRecords();
   }, []);
 
   const handleSaveConfig = async (e) => {
@@ -102,142 +67,45 @@ export default function EmailMasterPage() {
     }
   };
 
-  const handleCreateEmail = async (e) => {
-    e.preventDefault();
-    if (!newEmail.subject || !newEmail.recipient_email) {
-      toast.error("Please fill in Subject and Recipient Email.");
-      return;
-    }
-    setCreatingRecord(true);
-    try {
-      await createEmailRecord(newEmail);
-      toast.success("Email record logged successfully!");
-      setShowAddModal(false);
-      setNewEmail({
-        subject: '',
-        recipient_name: '',
-        recipient_email: '',
-        email_type: 'System Notice',
-        status: 'sent'
-      });
-      fetchRecords();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to log email record.");
-    } finally {
-      setCreatingRecord(false);
-    }
-  };
-
-  const handleDeleteEmail = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this email log record?")) return;
-    try {
-      await deleteEmailRecord(id);
-      toast.success("Email log record deleted successfully!");
-      fetchRecords();
-    } catch (err) {
-      toast.error("Failed to delete email record.");
-    }
-  };
-
-  // DataTable Columns definition for Tab 2
-  const emailColumns = [
-    { key: 'id', label: 'ID', minWidth: '80px', sortable: true },
-    { key: 'subject', label: 'Subject', minWidth: '220px', sortable: true, render: row => <span className="font-bold text-slate-900">{row.subject}</span> },
-    { key: 'recipient_name', label: 'Recipient Name', minWidth: '180px', sortable: true },
-    { key: 'recipient_email', label: 'Recipient Email', minWidth: '200px', sortable: true, render: row => <span className="font-mono text-xs text-blue-900">{row.recipient_email}</span> },
-    { key: 'email_type', label: 'Email Type', minWidth: '160px', sortable: true, render: row => <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-700">{row.email_type}</span> },
-    { key: 'sent_at', label: 'Sent At', minWidth: '160px', sortable: true, render: row => row.sent_at ? new Date(row.sent_at).toLocaleString() : 'N/A' },
-    {
-      key: 'status', label: 'Status', minWidth: '120px', sortable: true, render: row => (
-        <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide border ${
-          row.status === 'sent'
-            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-            : row.status === 'queued'
-            ? 'bg-amber-50 text-amber-700 border-amber-200'
-            : 'bg-rose-50 text-rose-700 border-rose-200'
-        }`}>
-          {row.status}
-        </span>
-      )
-    },
-    {
-      key: 'actions', label: 'Actions', minWidth: '110px', sortable: false, render: row => (
-        <button
-          onClick={() => handleDeleteEmail(row.id)}
-          className="text-xs font-bold text-rose-600 hover:text-rose-800 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all"
-        >
-          Delete
-        </button>
-      )
-    }
-  ];
-
   return (
-    <div className="flex-1 flex flex-col bg-slate-50">
+    <div className="flex-1 bg-slate-50 font-sans text-slate-900">
       {/* Universal Header (Navbar) */}
-      <Navbar />
+      <Navbar title="CRM Admin" />
 
       {/* Main Container */}
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+      <main className="mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
 
-        {/* Tab Navigation Controls */}
-        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/admin/dashboard')} className="text-xs font-semibold text-slate-500 hover:text-blue-900 flex items-center gap-1">
-              <span>←</span> Dashboard
-            </button>
-            <span className="text-slate-300">|</span>
-            <h1 className="text-xl font-bold text-slate-900">Email Master</h1>
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Email Master</h1>
+            <p className="text-slate-500 mt-1">Configure mail servers, global signatures, templates, and outbound email styling settings.</p>
           </div>
-
-          <div className="flex items-center gap-2 bg-slate-200/60 p-1 rounded-xl border border-slate-300">
-            <button
-              onClick={() => setActiveTab('config')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === 'config'
-                  ? 'bg-white text-blue-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              📧 Email Configuration & Templates
-            </button>
-            <button
-              onClick={() => setActiveTab('records')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === 'records'
-                  ? 'bg-white text-blue-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              📦 Sent Email Logs & Templates
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/admin/dashboard")}
+            className="text-slate-500 hover:text-slate-700 font-medium text-sm flex items-center gap-1 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Back to Dashboard
+          </button>
         </div>
 
-        {/* TAB 1: EMAIL CONFIGURATION FORM */}
-        {activeTab === 'config' && (
-          <form onSubmit={handleSaveConfig} className="space-y-6">
+        {/* Form Container */}
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+          <form onSubmit={handleSaveConfig} className="space-y-8">
 
             {/* Section 1: Core Mail Server & System Senders */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-              <div className="border-b border-slate-100 pb-3 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                    📧
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900">Mail Transport & System Senders</h2>
-                    <p className="text-xs text-slate-500">Configure outbound email provider, sender names, BCC lists, and RFC headers.</p>
-                  </div>
+            <div className="space-y-5">
+              <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                  📧
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={savingConfig}
-                  className="px-5 py-2 rounded-xl font-bold text-xs bg-blue-900 text-white hover:bg-blue-800 shadow transition-all flex items-center gap-1.5 shrink-0"
-                >
-                  {savingConfig ? <><span>⏳</span> Saving...</> : <><span>💾</span> Save Config</>}
-                </button>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Mail Transport & System Senders</h2>
+                  <p className="text-xs text-slate-500">Configure outbound email provider, sender names, and BCC lists.</p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -286,7 +154,7 @@ export default function EmailMasterPage() {
               </div>
 
               {/* Toggles */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="grid grid-cols-1 gap-4 pt-2">
                 <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
                   <input
                     type="checkbox"
@@ -297,19 +165,6 @@ export default function EmailMasterPage() {
                   <div>
                     <p className="text-xs font-bold text-slate-900">Disable Email Sending</p>
                     <p className="text-[11px] text-slate-500">Disables all outgoing emails within WHMCS.</p>
-                  </div>
-                </label>
-
-                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={config.disable_rfc3834_headers === 'enabled'}
-                    onChange={e => setConfig({ ...config, disable_rfc3834_headers: e.target.checked ? 'enabled' : 'disabled' })}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
-                  />
-                  <div>
-                    <p className="text-xs font-bold text-slate-900">Disable RFC3834 Headers</p>
-                    <p className="text-[11px] text-slate-500">Disables autoresponder prevention headers (RFC-3834).</p>
                   </div>
                 </label>
               </div>
@@ -353,8 +208,10 @@ export default function EmailMasterPage() {
               </div>
             </div>
 
+            <hr className="border-slate-100" />
+
             {/* Section 2: Global Email Signature */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">
                   ✍️
@@ -376,8 +233,10 @@ export default function EmailMasterPage() {
               </div>
             </div>
 
+            <hr className="border-slate-100" />
+
             {/* Section 3: Global Email CSS Styling */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm">
                   🎨
@@ -399,8 +258,10 @@ export default function EmailMasterPage() {
               </div>
             </div>
 
+            <hr className="border-slate-100" />
+
             {/* Section 4: Client Email Header & Footer Templates */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
                   💻
@@ -436,139 +297,19 @@ export default function EmailMasterPage() {
               </div>
             </div>
 
-            {/* Submit Action */}
-            <div className="flex justify-end pt-2">
+            {/* Bottom Form Submit Action */}
+            <div className="pt-4">
               <button
                 type="submit"
                 disabled={savingConfig}
-                className="px-6 py-2.5 rounded-xl font-bold text-sm bg-blue-900 text-white hover:bg-blue-800 shadow-md transition-all flex items-center gap-2"
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#0056cf] hover:bg-[#0040a1] focus:ring-2 focus:ring-offset-2 focus:ring-[#0056cf] disabled:opacity-50 transition-colors"
               >
-                {savingConfig ? <><span>⏳</span> Saving Configuration...</> : <><span>💾</span> Save Email Configuration</>}
+                {savingConfig ? "Saving Configuration..." : "Save Configuration Changes"}
               </button>
             </div>
 
           </form>
-        )}
-
-        {/* TAB 2: SENT EMAIL LOGS & TEMPLATES (DataTable.jsx) */}
-        {activeTab === 'records' && (
-          <div className="space-y-6">
-            <DataTable
-              tableId="email_master_records"
-              title="Sent Email Logs & Templates History"
-              data={emailRecords}
-              columns={emailColumns}
-              loading={recordsLoading}
-              searchPlaceholder="Search emails by subject, recipient, status..."
-              actionButton={
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-blue-900 px-4 text-sm font-semibold text-white transition-all hover:bg-blue-800 shadow-md"
-                >
-                  <span>+</span> Send / Log Test Email
-                </button>
-              }
-            />
-          </div>
-        )}
-
-        {/* Add Email Log Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-lg font-bold text-slate-900">Send / Log Test Email</h3>
-                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-              </div>
-
-              <form onSubmit={handleCreateEmail} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Email Subject *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newEmail.subject}
-                    onChange={e => setNewEmail({ ...newEmail, subject: e.target.value })}
-                    placeholder="System Notice: Account Password Changed"
-                    className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Recipient Name</label>
-                    <input
-                      type="text"
-                      value={newEmail.recipient_name}
-                      onChange={e => setNewEmail({ ...newEmail, recipient_name: e.target.value })}
-                      placeholder="John Doe"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Recipient Email *</label>
-                    <input
-                      type="email"
-                      required
-                      value={newEmail.recipient_email}
-                      onChange={e => setNewEmail({ ...newEmail, recipient_email: e.target.value })}
-                      placeholder="john@example.com"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-mono focus:border-blue-600 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Email Type</label>
-                    <select
-                      value={newEmail.email_type}
-                      onChange={e => setNewEmail({ ...newEmail, email_type: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    >
-                      <option value="System Notice">System Notice</option>
-                      <option value="Billing Invoice">Billing Invoice</option>
-                      <option value="Support Ticket">Support Ticket</option>
-                      <option value="Domain Reminder">Domain Reminder</option>
-                      <option value="Account Welcome">Account Welcome</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Status</label>
-                    <select
-                      value={newEmail.status}
-                      onChange={e => setNewEmail({ ...newEmail, status: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    >
-                      <option value="sent">Sent</option>
-                      <option value="queued">Queued</option>
-                      <option value="failed">Failed</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={creatingRecord}
-                    className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-900 text-white hover:bg-blue-800"
-                  >
-                    {creatingRecord ? 'Logging...' : 'Log Email Record'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        </div>
 
       </main>
     </div>

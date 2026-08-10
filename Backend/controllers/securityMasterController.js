@@ -92,58 +92,7 @@ const updateSecurityConfig = async (req, res) => {
         res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to update security configuration" });
     }
 };
-
-// CRUD FOR SECURITY RECORDS (DataTable.jsx)
-const getAllSecurityRecords = async (req, res) => {
-    try {
-        const [rows] = await db.execute("SELECT * FROM security_records ORDER BY id DESC");
-        res.status(200).json({ success: true, data: rows });
-    } catch (error) {
-        console.error("Get Security Records Error:", error);
-        res.status(500).json({ success: false, message: "Failed to fetch security records" });
-    }
-};
-
-const createSecurityRecord = async (req, res) => {
-    try {
-        const { ip_address, event_type, reason, status } = req.body;
-        if (!ip_address || !event_type) {
-            return res.status(400).json({ success: false, message: "IP Address and Event Type are required" });
-        }
-
-        const [result] = await db.execute(
-            `INSERT INTO security_records (ip_address, event_type, reason, status)
-             VALUES (?, ?, ?, ?)`,
-            [
-                ip_address,
-                event_type,
-                reason || '',
-                status || 'banned'
-            ]
-        );
-
-        res.status(201).json({ success: true, message: "Security record created successfully!", id: result.insertId });
-    } catch (error) {
-        console.error("Create Security Record Error:", error);
-        res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to create security record" });
-    }
-};
-
-const deleteSecurityRecord = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await db.execute("DELETE FROM security_records WHERE id = ?", [id]);
-        res.status(200).json({ success: true, message: "Security record deleted successfully!" });
-    } catch (error) {
-        console.error("Delete Security Record Error:", error);
-        res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to delete security record" });
-    }
-};
-
 module.exports = {
     getSecurityConfig,
-    updateSecurityConfig,
-    getAllSecurityRecords,
-    createSecurityRecord,
-    deleteSecurityRecord
+    updateSecurityConfig
 };

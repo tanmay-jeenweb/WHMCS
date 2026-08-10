@@ -38,34 +38,7 @@ const createSecurityMasterTables = async () => {
             VALUES (1, 'enabled', 'unauthenticated', 'default_6char', 'checkout,register,login', 'letters_numbers_special', 50, 15, '', 'disabled', 'disabled', 'disabled', 'disabled', 'enabled', 'disabled', 'X_FORWARDED_FOR', '', '', 'enabled', 'enabled', 'disabled')
         `);
     }
-
-    // 2. Security Audit & Banned IPs Table for DataTable.jsx
-    await db.execute(`
-        CREATE TABLE IF NOT EXISTS security_records (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            ip_address VARCHAR(100) NOT NULL,
-            event_type VARCHAR(100) NOT NULL,
-            reason VARCHAR(255) DEFAULT '',
-            banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            status ENUM('banned', 'whitelisted', 'log_only') DEFAULT 'banned',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        )
-    `);
-
-    // Insert sample security records if table is empty
-    const [records] = await db.execute("SELECT COUNT(*) as count FROM security_records");
-    if (records[0].count === 0) {
-        await db.execute(`
-            INSERT INTO security_records (ip_address, event_type, reason, status)
-            VALUES 
-            ('51.21.216.52', 'Whitelisted IP Access', 'WHMCS Official Statistics Server', 'whitelisted'),
-            ('192.168.1.105', 'Failed Admin Login', '3 Failed Password Attempts', 'banned'),
-            ('10.0.0.45', 'API Authentication', 'Successful OAuth2 Token Exchange', 'log_only')
-        `);
-    }
-
-    console.log("✅ Security Master tables initialized successfully.");
+    console.log("✅ Security Master configuration table initialized successfully.");
 };
 
 module.exports = {

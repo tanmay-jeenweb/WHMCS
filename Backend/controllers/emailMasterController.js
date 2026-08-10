@@ -21,7 +21,6 @@ const updateEmailConfig = async (req, res) => {
         const {
             mail_provider,
             disable_email_sending,
-            disable_rfc3834_headers,
             global_signature,
             global_css,
             client_email_header,
@@ -35,7 +34,7 @@ const updateEmailConfig = async (req, res) => {
 
         const query = `
             UPDATE email_config 
-            SET mail_provider = ?, disable_email_sending = ?, disable_rfc3834_headers = ?, 
+            SET mail_provider = ?, disable_email_sending = ?, 
                 global_signature = ?, global_css = ?, client_email_header = ?, client_email_footer = ?, 
                 system_from_name = ?, system_from_email = ?, bcc_messages = ?, 
                 presales_destination = ?, presales_email = ?
@@ -45,7 +44,6 @@ const updateEmailConfig = async (req, res) => {
         await db.execute(query, [
             mail_provider || 'PHP Mail',
             disable_email_sending || 'disabled',
-            disable_rfc3834_headers || 'disabled',
             global_signature || '',
             global_css || '',
             client_email_header || '',
@@ -74,58 +72,7 @@ const updateEmailConfig = async (req, res) => {
     }
 };
 
-// CRUD FOR EMAIL RECORDS (DataTable.jsx)
-const getAllEmailRecords = async (req, res) => {
-    try {
-        const [rows] = await db.execute("SELECT * FROM email_records ORDER BY id DESC");
-        res.status(200).json({ success: true, data: rows });
-    } catch (error) {
-        console.error("Get Email Records Error:", error);
-        res.status(500).json({ success: false, message: "Failed to fetch email records" });
-    }
-};
-
-const createEmailRecord = async (req, res) => {
-    try {
-        const { subject, recipient_email, recipient_name, email_type, status } = req.body;
-        if (!subject || !recipient_email) {
-            return res.status(400).json({ success: false, message: "Subject and Recipient Email are required" });
-        }
-
-        const [result] = await db.execute(
-            `INSERT INTO email_records (subject, recipient_email, recipient_name, email_type, status)
-             VALUES (?, ?, ?, ?, ?)`,
-            [
-                subject,
-                recipient_email,
-                recipient_name || '',
-                email_type || 'System Notice',
-                status || 'sent'
-            ]
-        );
-
-        res.status(201).json({ success: true, message: "Email log record created successfully!", id: result.insertId });
-    } catch (error) {
-        console.error("Create Email Record Error:", error);
-        res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to create email record" });
-    }
-};
-
-const deleteEmailRecord = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await db.execute("DELETE FROM email_records WHERE id = ?", [id]);
-        res.status(200).json({ success: true, message: "Email record deleted successfully!" });
-    } catch (error) {
-        console.error("Delete Email Record Error:", error);
-        res.status(400).json({ success: false, message: error.sqlMessage || error.message || "Failed to delete email record" });
-    }
-};
-
 module.exports = {
     getEmailConfig,
-    updateEmailConfig,
-    getAllEmailRecords,
-    createEmailRecord,
-    deleteEmailRecord
+    updateEmailConfig
 };

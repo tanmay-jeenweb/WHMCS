@@ -1,50 +1,71 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../../components/Navbar';
-import DataTable from '../../../components/DataTable';
 import {
   getInvoiceConfig,
-  updateInvoiceConfig,
-  getAllInvoiceRecords,
-  createInvoiceRecord,
-  deleteInvoiceRecord
+  updateInvoiceConfig
 } from '../../../api/invoiceMasterApi';
 import toast from 'react-hot-toast';
 
 export default function InvoiceMasterPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('config'); // 'config' or 'records'
 
-  // General Invoice Config State (Clean empty initial values)
+  // General Invoice Config State (Clean empty initial values matching WHMCS screenshot fields)
   const [config, setConfig] = useState({
-    continuous_invoicing: 'disabled',
-    invoice_due_days: '',
-    payment_reminder_emails: 'enabled',
+    continuous_invoice_generation: 'disabled',
+    enable_metric_usage_invoicing: 'disabled',
+    enable_pdf_invoices: 'disabled',
+    pdf_paper_size: 'A4',
+    pdf_font_family: 'Helvetica',
+    custom_pdf_font: '',
+    store_client_data_snapshot: 'disabled',
+    enable_mass_payment: 'disabled',
+    clients_choose_gateway: 'disabled',
+    group_similar_line_items: 'disabled',
+    cancellation_request_handling: 'disabled',
+    automatic_subscription_management: 'disabled',
+    enable_proforma_invoicing: 'disabled',
+    sequential_paid_invoice_numbering: 'disabled',
+    sequential_invoice_number_format: '{NUMBER}',
+    next_paid_invoice_number: '1',
     late_fee_type: 'percentage',
-    late_fee_amount: '',
-    late_fee_minimum: '',
-    auto_cancellation_days: '',
-    tax_enabled: 'disabled',
-    tax_type: 'exclusive',
-    tax_name: '',
-    tax_rate: '',
-    invoice_starting_number: ''
+    late_fee_amount: '10.00',
+    late_fee_minimum: '0.00',
+    accepted_credit_card_types: 'Visa,MasterCard,Discover,American Express,JCB',
+    issue_number_start_date: 'disabled',
+    invoice_incrementation: '1',
+    credit_note_number_incrementation: '1',
+    debit_note_number_incrementation: '1',
+    invoice_starting_number: '1'
   });
   const [savingConfig, setSavingConfig] = useState(false);
+  const [cardDropdownOpen, setCardDropdownOpen] = useState(false);
 
-  // DataTable State for Tab 2
-  const [invoiceRecords, setInvoiceRecords] = useState([]);
-  const [recordsLoading, setRecordsLoading] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newInvoice, setNewInvoice] = useState({
-    invoice_number: '',
-    client_name: '',
-    invoice_date: new Date().toISOString().split('T')[0],
-    due_date: new Date(Date.now() + 14*24*60*60*1000).toISOString().split('T')[0],
-    total_amount: '',
-    status: 'unpaid'
-  });
-  const [creatingInvoice, setCreatingInvoice] = useState(false);
+  const cardOptions = [
+    'Visa',
+    'MasterCard',
+    'Discover',
+    'American Express',
+    'JCB',
+    'Diners Club',
+    'Maestro',
+    'Dankort',
+    'Forbrugsforeningen',
+    'UnionPay',
+    'TROY'
+  ];
+
+  const selectedCards = config.accepted_credit_card_types ? config.accepted_credit_card_types.split(',').filter(Boolean) : [];
+
+  const handleCardToggle = (card) => {
+    let updated;
+    if (selectedCards.includes(card)) {
+      updated = selectedCards.filter(c => c !== card);
+    } else {
+      updated = [...selectedCards, card];
+    }
+    setConfig({ ...config, accepted_credit_card_types: updated.join(',') });
+  };
 
   const fetchConfig = async () => {
     try {
@@ -52,18 +73,31 @@ export default function InvoiceMasterPage() {
       if (res.data?.success && res.data.data) {
         const data = res.data.data;
         setConfig({
-          continuous_invoicing: data.continuous_invoicing || 'disabled',
-          invoice_due_days: data.invoice_due_days || '',
-          payment_reminder_emails: data.payment_reminder_emails || 'enabled',
+          continuous_invoice_generation: data.continuous_invoice_generation || 'disabled',
+          enable_metric_usage_invoicing: data.enable_metric_usage_invoicing || 'disabled',
+          enable_pdf_invoices: data.enable_pdf_invoices || 'disabled',
+          pdf_paper_size: data.pdf_paper_size || 'A4',
+          pdf_font_family: data.pdf_font_family || 'Helvetica',
+          custom_pdf_font: data.custom_pdf_font || '',
+          store_client_data_snapshot: data.store_client_data_snapshot || 'disabled',
+          enable_mass_payment: data.enable_mass_payment || 'disabled',
+          clients_choose_gateway: data.clients_choose_gateway || 'disabled',
+          group_similar_line_items: data.group_similar_line_items || 'disabled',
+          cancellation_request_handling: data.cancellation_request_handling || 'disabled',
+          automatic_subscription_management: data.automatic_subscription_management || 'disabled',
+          enable_proforma_invoicing: data.enable_proforma_invoicing || 'disabled',
+          sequential_paid_invoice_numbering: data.sequential_paid_invoice_numbering || 'disabled',
+          sequential_invoice_number_format: data.sequential_invoice_number_format || '{NUMBER}',
+          next_paid_invoice_number: data.next_paid_invoice_number !== null ? String(data.next_paid_invoice_number) : '1',
           late_fee_type: data.late_fee_type || 'percentage',
-          late_fee_amount: data.late_fee_amount || '',
-          late_fee_minimum: data.late_fee_minimum || '',
-          auto_cancellation_days: data.auto_cancellation_days || '',
-          tax_enabled: data.tax_enabled || 'disabled',
-          tax_type: data.tax_type || 'exclusive',
-          tax_name: data.tax_name || '',
-          tax_rate: data.tax_rate || '',
-          invoice_starting_number: data.invoice_starting_number || ''
+          late_fee_amount: data.late_fee_amount !== null ? String(data.late_fee_amount) : '10.00',
+          late_fee_minimum: data.late_fee_minimum !== null ? String(data.late_fee_minimum) : '0.00',
+          accepted_credit_card_types: data.accepted_credit_card_types || 'Visa,MasterCard,Discover,American Express,JCB',
+          issue_number_start_date: data.issue_number_start_date || 'disabled',
+          invoice_incrementation: data.invoice_incrementation !== null ? String(data.invoice_incrementation) : '1',
+          credit_note_number_incrementation: data.credit_note_number_incrementation !== null ? String(data.credit_note_number_incrementation) : '1',
+          debit_note_number_incrementation: data.debit_note_number_incrementation !== null ? String(data.debit_note_number_incrementation) : '1',
+          invoice_starting_number: data.invoice_starting_number !== null ? String(data.invoice_starting_number) : '1'
         });
       }
     } catch (err) {
@@ -71,23 +105,8 @@ export default function InvoiceMasterPage() {
     }
   };
 
-  const fetchRecords = async () => {
-    setRecordsLoading(true);
-    try {
-      const res = await getAllInvoiceRecords();
-      if (res.data?.success) {
-        setInvoiceRecords(res.data.data || []);
-      }
-    } catch (err) {
-      console.error("Failed to load invoice records", err);
-    } finally {
-      setRecordsLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchConfig();
-    fetchRecords();
   }, []);
 
   const handleSaveConfig = async (e) => {
@@ -103,479 +122,502 @@ export default function InvoiceMasterPage() {
     }
   };
 
-  const handleCreateInvoice = async (e) => {
-    e.preventDefault();
-    if (!newInvoice.invoice_number || !newInvoice.client_name) {
-      toast.error("Please fill in Invoice Number and Client Name.");
-      return;
-    }
-    setCreatingInvoice(true);
-    try {
-      await createInvoiceRecord(newInvoice);
-      toast.success("Invoice record logged successfully!");
-      setShowAddModal(false);
-      setNewInvoice({
-        invoice_number: '',
-        client_name: '',
-        invoice_date: new Date().toISOString().split('T')[0],
-        due_date: new Date(Date.now() + 14*24*60*60*1000).toISOString().split('T')[0],
-        total_amount: '',
-        status: 'unpaid'
-      });
-      fetchRecords();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create invoice record.");
-    } finally {
-      setCreatingInvoice(false);
-    }
-  };
-
-  const handleDeleteInvoice = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this invoice record?")) return;
-    try {
-      await deleteInvoiceRecord(id);
-      toast.success("Invoice record deleted successfully!");
-      fetchRecords();
-    } catch (err) {
-      toast.error("Failed to delete invoice record.");
-    }
-  };
-
-  // DataTable Columns definition for Tab 2
-  const invoiceColumns = [
-    { key: 'id', label: 'ID', minWidth: '80px', sortable: true },
-    { key: 'invoice_number', label: 'Invoice #', minWidth: '150px', sortable: true, render: row => <span className="font-bold font-mono text-blue-900">{row.invoice_number}</span> },
-    { key: 'client_name', label: 'Client Name', minWidth: '220px', sortable: true, render: row => <span className="font-bold text-slate-900">{row.client_name}</span> },
-    { key: 'invoice_date', label: 'Invoice Date', minWidth: '140px', sortable: true, render: row => row.invoice_date ? new Date(row.invoice_date).toLocaleDateString() : 'N/A' },
-    { key: 'due_date', label: 'Due Date', minWidth: '140px', sortable: true, render: row => row.due_date ? new Date(row.due_date).toLocaleDateString() : 'N/A' },
-    { key: 'total_amount', label: 'Total Amount', minWidth: '140px', sortable: true, render: row => <span className="font-mono font-bold text-slate-900">${parseFloat(row.total_amount || 0).toFixed(2)}</span> },
-    {
-      key: 'status', label: 'Status', minWidth: '130px', sortable: true, render: row => (
-        <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide border ${
-          row.status === 'paid'
-            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-            : row.status === 'unpaid'
-            ? 'bg-amber-50 text-amber-700 border-amber-200'
-            : row.status === 'refunded'
-            ? 'bg-sky-50 text-sky-700 border-sky-200'
-            : 'bg-slate-100 text-slate-600 border-slate-200'
-        }`}>
-          {row.status}
-        </span>
-      )
-    },
-    {
-      key: 'actions', label: 'Actions', minWidth: '110px', sortable: false, render: row => (
-        <button
-          onClick={() => handleDeleteInvoice(row.id)}
-          className="text-xs font-bold text-rose-600 hover:text-rose-800 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-all"
-        >
-          Delete
-        </button>
-      )
-    }
-  ];
-
   return (
-    <div className="flex-1 flex flex-col bg-slate-50">
+    <div className="flex-1 bg-slate-50 font-sans text-slate-900">
       {/* Universal Header (Navbar) */}
-      <Navbar />
+      <Navbar title="CRM Admin" />
 
       {/* Main Container */}
-      <main className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+      <main className="mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
 
-        {/* Tab Navigation Controls */}
-        <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/admin/dashboard')} className="text-xs font-semibold text-slate-500 hover:text-blue-900 flex items-center gap-1">
-              <span>←</span> Dashboard
-            </button>
-            <span className="text-slate-300">|</span>
-            <h1 className="text-xl font-bold text-slate-900">Invoice Master</h1>
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Invoice Master</h1>
+            <p className="text-slate-500 mt-1">Configure automated invoicing, late fee penalties, PDF format preferences, and sequential numbering rules.</p>
           </div>
-
-          <div className="flex items-center gap-2 bg-slate-200/60 p-1 rounded-xl border border-slate-300">
-            <button
-              onClick={() => setActiveTab('config')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === 'config'
-                  ? 'bg-white text-blue-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              🧾 Invoice & Billing Configuration
-            </button>
-            <button
-              onClick={() => setActiveTab('records')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === 'records'
-                  ? 'bg-white text-blue-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              📦 Invoices & Billing History
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/admin/dashboard")}
+            className="text-slate-500 hover:text-slate-700 font-medium text-sm flex items-center gap-1 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Back to Dashboard
+          </button>
         </div>
 
-        {/* TAB 1: INVOICE & BILLING CONFIGURATION FORM */}
-        {activeTab === 'config' && (
-          <form onSubmit={handleSaveConfig} className="space-y-6">
+        {/* Form Container */}
+        <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+          <form onSubmit={handleSaveConfig} className="space-y-8">
 
-            {/* Section 1: Invoice Generation & Cancellation Rules */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-              <div className="border-b border-slate-100 pb-3 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                    🧾
-                  </div>
-                  <div>
-                    <h2 className="text-base font-bold text-slate-900">Invoice Generation & Schedules</h2>
-                    <p className="text-xs text-slate-500">Configure advance invoice generation days, continuous billing, and auto-cancellation.</p>
-                  </div>
+            {/* Section 1: General Invoice Settings */}
+            <div className="space-y-5">
+              <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                  🧾
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={savingConfig}
-                  className="px-5 py-2 rounded-xl font-bold text-xs bg-blue-900 text-white hover:bg-blue-800 shadow transition-all flex items-center gap-1.5 shrink-0"
-                >
-                  {savingConfig ? <><span>⏳</span> Saving...</> : <><span>💾</span> Save Config</>}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Invoice Due Days</label>
-                  <input
-                    type="number"
-                    value={config.invoice_due_days}
-                    onChange={e => setConfig({ ...config, invoice_due_days: e.target.value })}
-                    placeholder="14"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 placeholder:text-slate-400 placeholder:italic focus:bg-white focus:border-blue-600 outline-none"
-                  />
-                  <p className="text-[11px] text-slate-500">Days before due date to generate recurring invoices.</p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Auto Cancellation Days</label>
-                  <input
-                    type="number"
-                    value={config.auto_cancellation_days}
-                    onChange={e => setConfig({ ...config, auto_cancellation_days: e.target.value })}
-                    placeholder="30"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 placeholder:text-slate-400 placeholder:italic focus:bg-white focus:border-blue-600 outline-none"
-                  />
-                  <p className="text-[11px] text-slate-500">Days overdue to automatically cancel unpaid services.</p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Invoice Starting Number</label>
-                  <input
-                    type="number"
-                    value={config.invoice_starting_number}
-                    onChange={e => setConfig({ ...config, invoice_starting_number: e.target.value })}
-                    placeholder="10001"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm font-mono text-slate-900 placeholder:text-slate-400 placeholder:italic focus:bg-white focus:border-blue-600 outline-none"
-                  />
-                  <p className="text-[11px] text-slate-500">Next sequential invoice ID starting number.</p>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">General Invoicing Preferences</h2>
+                  <p className="text-xs text-slate-500">Enable metric usage billing, snapshot generation, mass payments, and line item grouping.</p>
                 </div>
               </div>
 
-              {/* Toggles */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* 1. Continuous Invoice Generation */}
                 <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={config.continuous_invoicing === 'enabled'}
-                    onChange={e => setConfig({ ...config, continuous_invoicing: e.target.checked ? 'enabled' : 'disabled' })}
+                    checked={config.continuous_invoice_generation === 'enabled'}
+                    onChange={e => setConfig({ ...config, continuous_invoice_generation: e.target.checked ? 'enabled' : 'disabled' })}
                     className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
                   />
                   <div>
                     <p className="text-xs font-bold text-slate-900">Continuous Invoice Generation</p>
-                    <p className="text-[11px] text-slate-500">Check to generate recurring invoices even if previous invoices are unpaid.</p>
+                    <p className="text-[11px] text-slate-500">Generate invoices for each cycle even if previous remains unpaid.</p>
                   </div>
                 </label>
 
+                {/* 2. Enable Metric Usage Invoicing */}
                 <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={config.payment_reminder_emails === 'enabled'}
-                    onChange={e => setConfig({ ...config, payment_reminder_emails: e.target.checked ? 'enabled' : 'disabled' })}
+                    checked={config.enable_metric_usage_invoicing === 'enabled'}
+                    onChange={e => setConfig({ ...config, enable_metric_usage_invoicing: e.target.checked ? 'enabled' : 'disabled' })}
                     className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
                   />
                   <div>
-                    <p className="text-xs font-bold text-slate-900">Send Payment Reminders</p>
-                    <p className="text-[11px] text-slate-500">Send automated email reminders before and after invoice due dates.</p>
+                    <p className="text-xs font-bold text-slate-900">Metric Usage Invoicing</p>
+                    <p className="text-[11px] text-slate-500">Check to enable invoicing of metric usage for all priced product metrics.</p>
+                  </div>
+                </label>
+
+                {/* 3. Store Client Data Snapshot */}
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.store_client_data_snapshot === 'enabled'}
+                    onChange={e => setConfig({ ...config, store_client_data_snapshot: e.target.checked ? 'enabled' : 'disabled' })}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">Store Client Data Snapshot</p>
+                    <p className="text-[11px] text-slate-500">Preserve client details upon invoice generation to prevent profile changes.</p>
+                  </div>
+                </label>
+
+                {/* 4. Enable Mass Payment */}
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.enable_mass_payment === 'enabled'}
+                    onChange={e => setConfig({ ...config, enable_mass_payment: e.target.checked ? 'enabled' : 'disabled' })}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">Enable Mass Payment</p>
+                    <p className="text-[11px] text-slate-500">Check to enable the multiple invoice payment options on homepage.</p>
+                  </div>
+                </label>
+
+                {/* 5. Clients Choose Gateway */}
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.clients_choose_gateway === 'enabled'}
+                    onChange={e => setConfig({ ...config, clients_choose_gateway: e.target.checked ? 'enabled' : 'disabled' })}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">Clients Choose Gateway</p>
+                    <p className="text-[11px] text-slate-500">Check to allow clients to choose the gateway they pay with.</p>
+                  </div>
+                </label>
+
+                {/* 6. Group Similar Line Items */}
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.group_similar_line_items === 'enabled'}
+                    onChange={e => setConfig({ ...config, group_similar_line_items: e.target.checked ? 'enabled' : 'disabled' })}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">Group Similar Line Items</p>
+                    <p className="text-[11px] text-slate-500">Check to automatically group identical line items into quantity x format.</p>
+                  </div>
+                </label>
+
+                {/* 7. Cancellation Request Handling */}
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.cancellation_request_handling === 'enabled'}
+                    onChange={e => setConfig({ ...config, cancellation_request_handling: e.target.checked ? 'enabled' : 'disabled' })}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">Cancellation Request Handling</p>
+                    <p className="text-[11px] text-slate-500">Automatically cancel unpaid invoices when cancellation is submitted.</p>
+                  </div>
+                </label>
+
+                {/* 8. Automatic Subscription Management */}
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.automatic_subscription_management === 'enabled'}
+                    onChange={e => setConfig({ ...config, automatic_subscription_management: e.target.checked ? 'enabled' : 'disabled' })}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">Subscription Management</p>
+                    <p className="text-[11px] text-slate-500">Auto-cancel subscription agreements on Upgrade or Cancellation.</p>
+                  </div>
+                </label>
+
+                {/* 9. Enable Proforma Invoicing */}
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.enable_proforma_invoicing === 'enabled'}
+                    onChange={e => setConfig({ ...config, enable_proforma_invoicing: e.target.checked ? 'enabled' : 'disabled' })}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">Enable Proforma Invoicing</p>
+                    <p className="text-[11px] text-slate-500">Check to enable proforma invoicing for unpaid invoices.</p>
                   </div>
                 </label>
               </div>
             </div>
 
-            {/* Section 2: Late Fees Rules */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <hr className="border-slate-100" />
+
+            {/* Section 2: PDF Invoice Configurations */}
+            <div className="space-y-5">
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
-                  ⚠️
+                <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">
+                  📄
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Late Fee Policy & Calculation</h2>
-                  <p className="text-xs text-slate-500">Configure late fee penalty rules applied to overdue invoices.</p>
+                  <h2 className="text-base font-bold text-slate-900">PDF Invoice Configurations</h2>
+                  <p className="text-xs text-slate-500">Set up PDF file formats, page sizing, and custom font mapping.</p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                {/* Enable PDF Invoices Checkbox */}
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={config.enable_pdf_invoices === 'enabled'}
+                    onChange={e => setConfig({ ...config, enable_pdf_invoices: e.target.checked ? 'enabled' : 'disabled' })}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">Enable PDF Invoices</p>
+                    <p className="text-[11px] text-slate-500">Check to send PDF versions of invoices along with invoice emails.</p>
+                  </div>
+                </label>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* PDF Paper Size */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">PDF Paper Size</label>
+                    <select
+                      value={config.pdf_paper_size}
+                      onChange={e => setConfig({ ...config, pdf_paper_size: e.target.value })}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:bg-white focus:border-blue-600 outline-none cursor-pointer"
+                    >
+                      <option value="A4">A4</option>
+                      <option value="Letter">Letter</option>
+                    </select>
+                    <p className="text-[11px] text-slate-500">Choose the paper format to use when generating PDF files.</p>
+                  </div>
+
+                  {/* PDF Font Family */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">PDF Font Family</label>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-200">
+                      {['Courier', 'Freesans', 'Helvetica', 'Times', 'Dejavusans', 'Custom'].map(font => (
+                        <label key={font} className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold cursor-pointer">
+                          <input
+                            type="radio"
+                            name="pdf_font_family"
+                            value={font}
+                            checked={config.pdf_font_family === font}
+                            onChange={e => setConfig({ ...config, pdf_font_family: e.target.value })}
+                            className="h-3.5 w-3.5 text-blue-900"
+                          />
+                          {font}
+                        </label>
+                      ))}
+                    </div>
+                    {config.pdf_font_family === 'Custom' && (
+                      <div className="mt-2 space-y-1">
+                        <input
+                          type="text"
+                          value={config.custom_pdf_font}
+                          onChange={e => setConfig({ ...config, custom_pdf_font: e.target.value })}
+                          placeholder="Enter custom PDF font family name"
+                          className="w-full rounded-xl border border-slate-200 p-2.5 text-sm text-slate-900 focus:border-blue-600 outline-none"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr className="border-slate-100" />
+
+            {/* Section 3: Invoice Numbering & Incrementation */}
+            <div className="space-y-5">
+              <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm">
+                  🔢
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Invoice Numbering & Incrementation</h2>
+                  <p className="text-xs text-slate-500">Configure sequential numbering, formats, next invoice IDs, and credit note increments.</p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Sequential Paid Invoice Numbering */}
+                  <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={config.sequential_paid_invoice_numbering === 'enabled'}
+                      onChange={e => setConfig({ ...config, sequential_paid_invoice_numbering: e.target.checked ? 'enabled' : 'disabled' })}
+                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Sequential Paid Invoice Numbering</p>
+                      <p className="text-[11px] text-slate-500">Check to enable automatic sequential numbering of paid invoices.</p>
+                    </div>
+                  </label>
+
+                  {/* Sequential Invoice Number Format */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Sequential Invoice Number Format</label>
+                    <input
+                      type="text"
+                      value={config.sequential_invoice_number_format}
+                      onChange={e => setConfig({ ...config, sequential_invoice_number_format: e.target.value })}
+                      placeholder="{NUMBER}"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm font-mono text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
+                    />
+                    <p className="text-[11px] text-slate-500">Available auto-insert tags: {`{YEAR}`} {`{MONTH}`} {`{DAY}`} {`{NUMBER}`}.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                  {/* Next Paid Invoice Number */}
+                  <div className="space-y-1 col-span-2">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase">Next Paid Invoice Number</label>
+                    <input
+                      type="number"
+                      value={config.next_paid_invoice_number}
+                      onChange={e => setConfig({ ...config, next_paid_invoice_number: e.target.value })}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-900 focus:border-blue-600 outline-none"
+                    />
+                  </div>
+
+                  {/* Invoice Incrementation */}
+                  <div className="space-y-1 col-span-2">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase">Invoice # Incrementation</label>
+                    <input
+                      type="number"
+                      value={config.invoice_incrementation}
+                      onChange={e => setConfig({ ...config, invoice_incrementation: e.target.value })}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-900 focus:border-blue-600 outline-none"
+                    />
+                  </div>
+
+                  {/* Credit Note Number Incrementation */}
+                  <div className="space-y-1 col-span-2">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase">Credit Note Incrementation</label>
+                    <input
+                      type="number"
+                      value={config.credit_note_number_incrementation}
+                      onChange={e => setConfig({ ...config, credit_note_number_incrementation: e.target.value })}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-900 focus:border-blue-600 outline-none"
+                    />
+                  </div>
+
+                  {/* Debit Note Number Incrementation */}
+                  <div className="space-y-1 col-span-2">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase">Debit Note Incrementation</label>
+                    <input
+                      type="number"
+                      value={config.debit_note_number_incrementation}
+                      onChange={e => setConfig({ ...config, debit_note_number_incrementation: e.target.value })}
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-900 focus:border-blue-600 outline-none"
+                    />
+                  </div>
+
+                  {/* Invoice Starting Number */}
+                  <div className="space-y-1 col-span-4">
+                    <label className="text-[11px] font-bold text-slate-600 uppercase">Invoice Starting #</label>
+                    <input
+                      type="number"
+                      value={config.invoice_starting_number}
+                      onChange={e => setConfig({ ...config, invoice_starting_number: e.target.value })}
+                      placeholder="1"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs text-slate-900 focus:border-blue-600 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr className="border-slate-100" />
+
+            {/* Section 4: Late Fees & Credit Cards */}
+            <div className="space-y-5">
+              <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">
+                  💳
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Late Fees & Accepted Credit Cards</h2>
+                  <p className="text-xs text-slate-500">Configure late fee calculation amounts, minimums, accepted cards, and start dates.</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="space-y-1.5">
+                {/* Late Fee Type */}
+                <div className="space-y-1.5 col-span-1">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Late Fee Type</label>
-                  <select
-                    value={config.late_fee_type}
-                    onChange={e => setConfig({ ...config, late_fee_type: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:bg-white focus:border-blue-600 outline-none cursor-pointer"
-                  >
-                    <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed Amount ($)</option>
-                  </select>
-                  <p className="text-[11px] text-slate-500">Calculation mode for late fees.</p>
+                  <div className="flex gap-4 bg-slate-50/50 p-3 rounded-xl border border-slate-200">
+                    <label className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold cursor-pointer">
+                      <input
+                        type="radio"
+                        name="late_fee_type"
+                        value="percentage"
+                        checked={config.late_fee_type === 'percentage'}
+                        onChange={e => setConfig({ ...config, late_fee_type: e.target.value })}
+                        className="h-3.5 w-3.5 text-blue-900"
+                      />
+                      Percentage
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold cursor-pointer">
+                      <input
+                        type="radio"
+                        name="late_fee_type"
+                        value="fixed"
+                        checked={config.late_fee_type === 'fixed'}
+                        onChange={e => setConfig({ ...config, late_fee_type: e.target.value })}
+                        className="h-3.5 w-3.5 text-blue-900"
+                      />
+                      Fixed Amount
+                    </label>
+                  </div>
                 </div>
 
-                <div className="space-y-1.5">
+                {/* Late Fee Amount */}
+                <div className="space-y-1.5 col-span-1">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Late Fee Amount</label>
                   <input
                     type="number"
                     step="0.01"
                     value={config.late_fee_amount}
                     onChange={e => setConfig({ ...config, late_fee_amount: e.target.value })}
-                    placeholder="10.00"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm font-mono text-slate-900 placeholder:text-slate-400 placeholder:italic focus:bg-white focus:border-blue-600 outline-none"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm font-mono text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
                   />
-                  <p className="text-[11px] text-slate-500">Fee percentage or fixed currency value.</p>
+                  <p className="text-[11px] text-slate-500">Enter percentage or monetary value to apply (0 to disable).</p>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Minimum Invoice Total for Fee</label>
+                {/* Late Fee Minimum */}
+                <div className="space-y-1.5 col-span-1">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Late Fee Minimum</label>
                   <input
                     type="number"
                     step="0.01"
                     value={config.late_fee_minimum}
                     onChange={e => setConfig({ ...config, late_fee_minimum: e.target.value })}
-                    placeholder="0.00"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm font-mono text-slate-900 placeholder:text-slate-400 placeholder:italic focus:bg-white focus:border-blue-600 outline-none"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm font-mono text-slate-900 focus:bg-white focus:border-blue-600 outline-none"
                   />
-                  <p className="text-[11px] text-slate-500">Minimum total required before late fee applies.</p>
+                  <p className="text-[11px] text-slate-500">Enter the minimum amount to charge when calculated late fee falls below this.</p>
                 </div>
-              </div>
-            </div>
 
-            {/* Section 3: Tax Calculation Settings */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-              <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm">
-                  📊
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-slate-900">Tax Settings (VAT / GST)</h2>
-                  <p className="text-xs text-slate-500">Configure tax calculations and rates on invoices.</p>
-                </div>
-              </div>
+                {/* Accepted Credit Card Types (Dropdown with checkboxes) */}
+                <div className="space-y-1.5 md:col-span-2 relative">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Accepted Credit Card Types</label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setCardDropdownOpen(!cardDropdownOpen)}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 outline-none text-left flex justify-between items-center transition-all cursor-pointer"
+                    >
+                      <span className="truncate">
+                        {selectedCards.length > 0 ? selectedCards.join(', ') : 'Select accepted credit cards...'}
+                      </span>
+                      <svg className={`w-4 h-4 text-slate-500 transition-transform ${cardDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
 
-              <div className="pt-1">
-                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer">
+                    {cardDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setCardDropdownOpen(false)} />
+                        <div className="absolute left-0 mt-2 w-full max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg z-20 space-y-1">
+                          {cardOptions.map(card => {
+                            const isChecked = selectedCards.includes(card);
+                            return (
+                              <label
+                                key={card}
+                                className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-50 cursor-pointer text-sm text-slate-900 transition-colors"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => handleCardToggle(card)}
+                                  className="h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500 cursor-pointer"
+                                />
+                                <span className="font-medium">{card}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500">Select the credit card brands you want to accept during payment transactions.</p>
+                </div>
+
+                {/* Issue Number/Start Date */}
+                <label className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 cursor-pointer self-center">
                   <input
                     type="checkbox"
-                    checked={config.tax_enabled === 'enabled'}
-                    onChange={e => setConfig({ ...config, tax_enabled: e.target.checked ? 'enabled' : 'disabled' })}
+                    checked={config.issue_number_start_date === 'enabled'}
+                    onChange={e => setConfig({ ...config, issue_number_start_date: e.target.checked ? 'enabled' : 'disabled' })}
                     className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-500"
                   />
                   <div>
-                    <p className="text-xs font-bold text-slate-900">Enable Tax Calculation</p>
-                    <p className="text-[11px] text-slate-500">Check to calculate tax on invoices based on client country rules.</p>
+                    <p className="text-xs font-bold text-slate-900">Issue Number/Start Date</p>
+                    <p className="text-[11px] text-slate-500">Check to show these fields for credit card payments.</p>
                   </div>
                 </label>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Tax Type</label>
-                  <select
-                    value={config.tax_type}
-                    onChange={e => setConfig({ ...config, tax_type: e.target.value })}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 focus:bg-white focus:border-blue-600 outline-none cursor-pointer"
-                  >
-                    <option value="exclusive">Exclusive (Add tax to price)</option>
-                    <option value="inclusive">Inclusive (Price includes tax)</option>
-                  </select>
-                  <p className="text-[11px] text-slate-500">Tax application mode.</p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Tax Name</label>
-                  <input
-                    type="text"
-                    value={config.tax_name}
-                    onChange={e => setConfig({ ...config, tax_name: e.target.value })}
-                    placeholder="VAT / GST / Sales Tax"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 placeholder:text-slate-400 placeholder:italic focus:bg-white focus:border-blue-600 outline-none"
-                  />
-                  <p className="text-[11px] text-slate-500">Tax label shown on invoices.</p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Tax Rate (%)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={config.tax_rate}
-                    onChange={e => setConfig({ ...config, tax_rate: e.target.value })}
-                    placeholder="18.00"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm font-mono text-slate-900 placeholder:text-slate-400 placeholder:italic focus:bg-white focus:border-blue-600 outline-none"
-                  />
-                  <p className="text-[11px] text-slate-500">Default percentage tax rate.</p>
-                </div>
-              </div>
             </div>
 
-            {/* Submit Action */}
-            <div className="flex justify-end pt-2">
+            {/* Bottom Form Submit Action */}
+            <div className="pt-4">
               <button
                 type="submit"
                 disabled={savingConfig}
-                className="px-6 py-2.5 rounded-xl font-bold text-sm bg-blue-900 text-white hover:bg-blue-800 shadow-md transition-all flex items-center gap-2"
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#0056cf] hover:bg-[#0040a1] focus:ring-2 focus:ring-offset-2 focus:ring-[#0056cf] disabled:opacity-50 transition-colors"
               >
-                {savingConfig ? <><span>⏳</span> Saving Configuration...</> : <><span>💾</span> Save Invoice Configuration</>}
+                {savingConfig ? "Saving Configuration..." : "Save Configuration Changes"}
               </button>
             </div>
 
           </form>
-        )}
-
-        {/* TAB 2: INVOICES & BILLING HISTORY (DataTable.jsx) */}
-        {activeTab === 'records' && (
-          <div className="space-y-6">
-            <DataTable
-              tableId="invoice_master_records"
-              title="Invoices & Billing History"
-              data={invoiceRecords}
-              columns={invoiceColumns}
-              loading={recordsLoading}
-              searchPlaceholder="Search invoices by number, client, status..."
-              actionButton={
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-blue-900 px-4 text-sm font-semibold text-white transition-all hover:bg-blue-800 shadow-md"
-                >
-                  <span>+</span> Generate New Invoice
-                </button>
-              }
-            />
-          </div>
-        )}
-
-        {/* Add Invoice Modal */}
-        {showAddModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 className="text-lg font-bold text-slate-900">Generate New Invoice</h3>
-                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-              </div>
-
-              <form onSubmit={handleCreateInvoice} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Invoice Number *</label>
-                    <input
-                      type="text"
-                      required
-                      value={newInvoice.invoice_number}
-                      onChange={e => setNewInvoice({ ...newInvoice, invoice_number: e.target.value })}
-                      placeholder="INV-10004"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-mono focus:border-blue-600 outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Client Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={newInvoice.client_name}
-                      onChange={e => setNewInvoice({ ...newInvoice, client_name: e.target.value })}
-                      placeholder="Acme Corporation"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Invoice Date</label>
-                    <input
-                      type="date"
-                      value={newInvoice.invoice_date}
-                      onChange={e => setNewInvoice({ ...newInvoice, invoice_date: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Due Date</label>
-                    <input
-                      type="date"
-                      value={newInvoice.due_date}
-                      onChange={e => setNewInvoice({ ...newInvoice, due_date: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Total Amount ($)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newInvoice.total_amount}
-                      onChange={e => setNewInvoice({ ...newInvoice, total_amount: e.target.value })}
-                      placeholder="199.99"
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-mono focus:border-blue-600 outline-none"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Status</label>
-                    <select
-                      value={newInvoice.status}
-                      onChange={e => setNewInvoice({ ...newInvoice, status: e.target.value })}
-                      className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-blue-600 outline-none"
-                    >
-                      <option value="unpaid">Unpaid</option>
-                      <option value="paid">Paid</option>
-                      <option value="cancelled">Cancelled</option>
-                      <option value="refunded">Refunded</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={creatingInvoice}
-                    className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-900 text-white hover:bg-blue-800"
-                  >
-                    {creatingInvoice ? 'Creating...' : 'Create Invoice Record'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        </div>
 
       </main>
     </div>
