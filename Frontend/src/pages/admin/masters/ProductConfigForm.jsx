@@ -46,7 +46,22 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
   const [bienniallySetup, setBienniallySetup] = useState("");
   const [trienniallyPrice, setTrienniallyPrice] = useState("");
   const [trienniallySetup, setTrienniallySetup] = useState("");
+  
+  const [allowMultipleQuantities, setAllowMultipleQuantities] = useState("no");
+  const [recurringCyclesLimit, setRecurringCyclesLimit] = useState(0);
   const [fixedTerm, setFixedTerm] = useState(0);
+  const [terminationEmail, setTerminationEmail] = useState("None");
+  const [prorataBilling, setProrataBilling] = useState(false);
+  const [prorataDate, setProrataDate] = useState(0);
+  const [chargeNextMonth, setChargeNextMonth] = useState(0);
+  const [onDemandRenewals, setOnDemandRenewals] = useState("system_default");
+  const [allowEarlyRenewals, setAllowEarlyRenewals] = useState(false);
+  const [earlyRenewalMonthly, setEarlyRenewalMonthly] = useState(31);
+  const [earlyRenewalQuarterly, setEarlyRenewalQuarterly] = useState(92);
+  const [earlyRenewalSemiannually, setEarlyRenewalSemiannually] = useState(184);
+  const [earlyRenewalAnnually, setEarlyRenewalAnnually] = useState(366);
+  const [earlyRenewalBiennially, setEarlyRenewalBiennially] = useState(731);
+  const [earlyRenewalTriennially, setEarlyRenewalTriennially] = useState(1096);
 
   // Tab 3: Module Settings States
   const [moduleName, setModuleName] = useState(row?.module_name || "No Module");
@@ -63,11 +78,15 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
   ]);
 
   // Tab 5: Configurable Options States
+  const [assignedOptionGroups, setAssignedOptionGroups] = useState("");
   const [configurableOptions, setConfigurableOptions] = useState([
     { id: 1, name: "Extra RAM", type: "Dropdown", choices: "1 GB, 2 GB, 4 GB" }
   ]);
 
   // Tab 6 Upgrade path
+  const [upgradePackages, setUpgradePackages] = useState([]);
+  const [upgradeConfigOptions, setUpgradeConfigOptions] = useState(false);
+  const [upgradeEmail, setUpgradeEmail] = useState("None");
   const [upgrades, setUpgrades] = useState([]);
 
   // Tab 7 Recommendation path
@@ -107,6 +126,73 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
             setEnableStock(d.enable_stock === 1);
             setStockQty(d.stock_qty || 0);
             setRetired(d.retired === 1);
+
+            // Pricing fields
+            setPaymentType(d.payment_type || "recurring");
+            setMonthlyPrice(d.monthly_price || "");
+            setMonthlySetup(d.monthly_setup || "");
+            setQuarterlyPrice(d.quarterly_price || "");
+            setQuarterlySetup(d.quarterly_setup || "");
+            setSemiannuallyPrice(d.semiannually_price || "");
+            setSemiannuallySetup(d.semiannually_setup || "");
+            setAnnuallyPrice(d.annually_price || "");
+            setAnnuallySetup(d.annually_setup || "");
+            setBienniallyPrice(d.biennially_price || "");
+            setBienniallySetup(d.biennially_setup || "");
+            setTrienniallyPrice(d.triennially_price || "");
+            setTrienniallySetup(d.triennially_setup || "");
+
+            setAllowMultipleQuantities(d.allow_multiple_quantities || "no");
+            setRecurringCyclesLimit(d.recurring_cycles_limit ?? 0);
+            setFixedTerm(d.auto_terminate_fixed_term ?? 0);
+            setTerminationEmail(d.termination_email || "None");
+            setProrataBilling(d.prorata_billing === 1);
+            setProrataDate(d.prorata_date ?? 0);
+            setChargeNextMonth(d.charge_next_month ?? 0);
+            setOnDemandRenewals(d.ondemand_renewals || "system_default");
+            setAllowEarlyRenewals(d.allow_early_renewals === 1);
+            setEarlyRenewalMonthly(d.early_renewal_monthly ?? 31);
+            setEarlyRenewalQuarterly(d.early_renewal_quarterly ?? 92);
+            setEarlyRenewalSemiannually(d.early_renewal_semiannually ?? 184);
+            setEarlyRenewalAnnually(d.early_renewal_annually ?? 366);
+            setEarlyRenewalBiennially(d.early_renewal_biennially ?? 731);
+            setEarlyRenewalTriennially(d.early_renewal_triennially ?? 1096);
+
+            // Module Settings
+            setServerGroup(d.server_group || "None");
+            setCpanelPackage(d.cpanel_package || "");
+            setCpanelQuota(d.cpanel_quota || "");
+            setCpanelBandwidth(d.cpanel_bandwidth || "");
+            setCpanelMaxFtp(d.cpanel_max_ftp || "");
+            setProvisionType(d.provision_type || "manual");
+
+            // Configurable Options
+            setAssignedOptionGroups(d.assigned_option_groups || "");
+
+            // Upgrade Settings
+            let parsedPackages = [];
+            if (typeof d.upgrade_packages === 'string') {
+              try { parsedPackages = JSON.parse(d.upgrade_packages); } catch(e) { parsedPackages = []; }
+            } else if (Array.isArray(d.upgrade_packages)) {
+              parsedPackages = d.upgrade_packages;
+            }
+            setUpgradePackages(parsedPackages);
+            setUpgradeConfigOptions(d.upgrade_config_options === 1);
+            setUpgradeEmail(d.upgrade_email || "None");
+
+            // Cross-sells Settings
+            let parsedCrossSells = [];
+            if (typeof d.cross_sells === 'string') {
+              try { parsedCrossSells = JSON.parse(d.cross_sells); } catch(e) { parsedCrossSells = []; }
+            } else if (Array.isArray(d.cross_sells)) {
+              parsedCrossSells = d.cross_sells;
+            }
+            setCrossSells(parsedCrossSells);
+
+            // Custom Fields
+            if (Array.isArray(d.custom_fields)) {
+              setCustomFields(d.custom_fields);
+            }
           }
         })
         .catch((err) => {
@@ -119,6 +205,7 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
     e.preventDefault();
     try {
       const detailsData = {
+        // Details
         product_tagline: productTagline,
         short_description: shortDescription,
         description: description,
@@ -130,7 +217,61 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
         hidden: hidden,
         enable_stock: enableStock,
         stock_qty: stockQty,
-        retired: retired
+        retired: retired,
+
+        // Pricing
+        payment_type: paymentType,
+        monthly_price: monthlyPrice,
+        monthly_setup: monthlySetup,
+        quarterly_price: quarterlyPrice,
+        quarterly_setup: quarterlySetup,
+        semiannually_price: semiannuallyPrice,
+        semiannually_setup: semiannuallySetup,
+        annually_price: annuallyPrice,
+        annually_setup: annuallySetup,
+        biennially_price: bienniallyPrice,
+        biennially_setup: bienniallySetup,
+        triennially_price: trienniallyPrice,
+        triennially_setup: trienniallySetup,
+
+        allow_multiple_quantities: allowMultipleQuantities,
+        recurring_cycles_limit: recurringCyclesLimit,
+        auto_terminate_fixed_term: fixedTerm,
+        termination_email: terminationEmail,
+        prorata_billing: prorataBilling,
+        prorata_date: prorataDate,
+        charge_next_month: chargeNextMonth,
+        ondemand_renewals: onDemandRenewals,
+        allow_early_renewals: allowEarlyRenewals,
+        early_renewal_monthly: earlyRenewalMonthly,
+        early_renewal_quarterly: earlyRenewalQuarterly,
+        early_renewal_semiannually: earlyRenewalSemiannually,
+        early_renewal_annually: earlyRenewalAnnually,
+        early_renewal_biennially: earlyRenewalBiennially,
+        early_renewal_triennially: earlyRenewalTriennially,
+
+        // Module Settings
+        module_name: moduleName,
+        server_group: serverGroup,
+        cpanel_package: cpanelPackage,
+        cpanel_quota: cpanelQuota,
+        cpanel_bandwidth: cpanelBandwidth,
+        cpanel_max_ftp: cpanelMaxFtp,
+        provision_type: provisionType,
+
+        // Configurable Options
+        assigned_option_groups: assignedOptionGroups,
+
+        // Upgrade Settings
+        upgrade_packages: upgradePackages,
+        upgrade_config_options: upgradeConfigOptions,
+        upgrade_email: upgradeEmail,
+
+        // Cross Sells
+        cross_sells: crossSells,
+
+        // Custom Fields
+        custom_fields: customFields
       };
 
       const res = await saveProductConfigDetails(row.id, detailsData);
@@ -258,8 +399,36 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
                 setTrienniallyPrice={setTrienniallyPrice}
                 trienniallySetup={trienniallySetup}
                 setTrienniallySetup={setTrienniallySetup}
+                allowMultipleQuantities={allowMultipleQuantities}
+                setAllowMultipleQuantities={setAllowMultipleQuantities}
+                recurringCyclesLimit={recurringCyclesLimit}
+                setRecurringCyclesLimit={setRecurringCyclesLimit}
                 fixedTerm={fixedTerm}
                 setFixedTerm={setFixedTerm}
+                terminationEmail={terminationEmail}
+                setTerminationEmail={setTerminationEmail}
+                prorataBilling={prorataBilling}
+                setProrataBilling={setProrataBilling}
+                prorataDate={prorataDate}
+                setProrataDate={setProrataDate}
+                chargeNextMonth={chargeNextMonth}
+                setChargeNextMonth={setChargeNextMonth}
+                onDemandRenewals={onDemandRenewals}
+                setOnDemandRenewals={setOnDemandRenewals}
+                allowEarlyRenewals={allowEarlyRenewals}
+                setAllowEarlyRenewals={setAllowEarlyRenewals}
+                earlyRenewalMonthly={earlyRenewalMonthly}
+                setEarlyRenewalMonthly={setEarlyRenewalMonthly}
+                earlyRenewalQuarterly={earlyRenewalQuarterly}
+                setEarlyRenewalQuarterly={setEarlyRenewalQuarterly}
+                earlyRenewalSemiannually={earlyRenewalSemiannually}
+                setEarlyRenewalSemiannually={setEarlyRenewalSemiannually}
+                earlyRenewalAnnually={earlyRenewalAnnually}
+                setEarlyRenewalAnnually={setEarlyRenewalAnnually}
+                earlyRenewalBiennially={earlyRenewalBiennially}
+                setEarlyRenewalBiennially={setEarlyRenewalBiennially}
+                earlyRenewalTriennially={earlyRenewalTriennially}
+                setEarlyRenewalTriennially={setEarlyRenewalTriennially}
               />
             )}
 
@@ -267,6 +436,7 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
             {activeTab === "module" && (
               <ModuleTab
                 moduleName={moduleName}
+                setModuleName={setModuleName}
                 serverGroup={serverGroup}
                 setServerGroup={setServerGroup}
                 cpanelPackage={cpanelPackage}
@@ -293,8 +463,8 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
             {/* 5. CONFIGURABLE OPTIONS TAB */}
             {activeTab === "configurableOptions" && (
               <OptionsTab
-                configurableOptions={configurableOptions}
-                setConfigurableOptions={setConfigurableOptions}
+                assignedOptionGroups={assignedOptionGroups}
+                setAssignedOptionGroups={setAssignedOptionGroups}
               />
             )}
 
@@ -303,8 +473,12 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
               <UpgradesTab
                 items={items}
                 row={row}
-                upgrades={upgrades}
-                setUpgrades={setUpgrades}
+                upgradePackages={upgradePackages}
+                setUpgradePackages={setUpgradePackages}
+                upgradeConfigOptions={upgradeConfigOptions}
+                setUpgradeConfigOptions={setUpgradeConfigOptions}
+                upgradeEmail={upgradeEmail}
+                setUpgradeEmail={setUpgradeEmail}
               />
             )}
 
@@ -321,6 +495,7 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
             {/* 8. LINKS TAB */}
             {activeTab === "links" && (
               <LinksTab
+                row={row}
                 url={url}
                 customCheckoutUrl={customCheckoutUrl}
                 setCustomCheckoutUrl={setCustomCheckoutUrl}

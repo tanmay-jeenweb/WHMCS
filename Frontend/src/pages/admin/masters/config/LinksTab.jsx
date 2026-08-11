@@ -1,60 +1,140 @@
 import React from "react";
 import toast from "react-hot-toast";
 
-export default function LinksTab({
-  url,
-  customCheckoutUrl,
-  setCustomCheckoutUrl
-}) {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider m-0">Store & Order Links</h4>
-        <p className="text-[11px] text-slate-500 mt-0.5 mb-0 font-sans">Use these URLs to link directly to this product checkout.</p>
-      </div>
+export default function LinksTab({ row, url }) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:5173";
+  const productId = row?.id || 1;
+  const groupSlug = (row?.product_group_name || "store").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const productSlug = (row?.product_name || "product").toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <label className="block text-[13px] font-semibold text-slate-700">
-            Direct Store Link
-          </label>
-          <div className="flex gap-2">
+  const directCartLink = url || `${origin}/index.php?rp=/store/${groupSlug}/${productSlug}`;
+  const directTemplateLink = `${origin}/cart.php?a=add&pid=${productId}&carttpl=standard_cart`;
+  const directDomainLink = `${origin}/cart.php?a=add&pid=${productId}&sld=whmcs&tld=.com`;
+  const productGroupLink = `${origin}/index.php?rp=/store/${groupSlug}`;
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copied link to clipboard!");
+  };
+
+  return (
+    <div className="space-y-6 font-sans">
+      <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100 text-xs sm:text-sm">
+        
+        {/* Direct Shopping Cart Link */}
+        <div className="grid grid-cols-1 sm:grid-cols-5 py-3.5 px-4 bg-white items-center gap-2 sm:gap-4">
+          <div className="sm:col-span-1 sm:text-right font-semibold text-slate-700">
+            Direct Shopping Cart Link
+          </div>
+          <div className="sm:col-span-4 flex items-center gap-2">
             <input
               type="text"
               readOnly
-              value={url}
-              className="flex-1 box-border border-[1.5px] border-slate-200 bg-slate-50 font-mono rounded-xl py-3 px-4 text-xs outline-none text-slate-600"
+              value={directCartLink}
+              className="w-full sm:w-[500px] px-3 py-1.5 border border-slate-300 bg-slate-50 rounded-lg text-xs font-mono text-slate-700 outline-none"
             />
             <button
               type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(url);
-                toast.success("Copied to clipboard!");
-              }}
-              className="px-4 py-2.5 text-xs font-bold bg-white text-slate-700 border border-slate-300 rounded-xl hover:bg-slate-50 cursor-pointer flex items-center gap-1.5"
+              onClick={() => copyToClipboard(directCartLink)}
+              className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium text-xs rounded-lg transition-colors cursor-pointer"
             >
-              Copy Link
+              Copy
             </button>
           </div>
-          <p className="text-[11px] text-slate-500 m-0">
-            Generated automatically based on Product Group and Product Name.
-          </p>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="block text-[13px] font-semibold text-slate-700">
-            Custom Checkout URL
-          </label>
-          <input
-            type="text"
-            placeholder="e.g. https://mycustomportal.com/checkout?plan=starter"
-            value={customCheckoutUrl}
-            onChange={(e) => setCustomCheckoutUrl(e.target.value)}
-            className="w-full box-border border-[1.5px] border-slate-300 rounded-xl py-3 px-4 text-sm outline-none text-slate-800 transition-all focus:border-blue-600"
-          />
-          <p className="text-[11px] text-slate-500 m-0 font-sans">
-            Provide an override URL if checkout takes place on an external portal.
-          </p>
+        {/* Direct Shopping Cart Link Specifying Template */}
+        <div className="grid grid-cols-1 sm:grid-cols-5 py-3.5 px-4 bg-white items-center gap-2 sm:gap-4">
+          <div className="sm:col-span-1 sm:text-right font-semibold text-slate-700">
+            Direct Shopping Cart Link Specifying Template
+          </div>
+          <div className="sm:col-span-4 flex items-center gap-2">
+            <input
+              type="text"
+              readOnly
+              value={directTemplateLink}
+              className="w-full sm:w-[500px] px-3 py-1.5 border border-slate-300 bg-slate-50 rounded-lg text-xs font-mono text-slate-700 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => copyToClipboard(directTemplateLink)}
+              className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium text-xs rounded-lg transition-colors cursor-pointer"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+
+        {/* Direct Shopping Cart Link Including Domain */}
+        <div className="grid grid-cols-1 sm:grid-cols-5 py-3.5 px-4 bg-white items-center gap-2 sm:gap-4">
+          <div className="sm:col-span-1 sm:text-right font-semibold text-slate-700">
+            Direct Shopping Cart Link Including Domain
+          </div>
+          <div className="sm:col-span-4 flex items-center gap-2">
+            <input
+              type="text"
+              readOnly
+              value={directDomainLink}
+              className="w-full sm:w-[500px] px-3 py-1.5 border border-slate-300 bg-slate-50 rounded-lg text-xs font-mono text-slate-700 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => copyToClipboard(directDomainLink)}
+              className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium text-xs rounded-lg transition-colors cursor-pointer"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+
+        {/* Product Group Cart Link */}
+        <div className="grid grid-cols-1 sm:grid-cols-5 py-3.5 px-4 bg-white items-center gap-2 sm:gap-4">
+          <div className="sm:col-span-1 sm:text-right font-semibold text-slate-700">
+            Product Group Cart Link
+          </div>
+          <div className="sm:col-span-4 flex items-center gap-2">
+            <input
+              type="text"
+              readOnly
+              value={productGroupLink}
+              className="w-full sm:w-[500px] px-3 py-1.5 border border-slate-300 bg-slate-50 rounded-lg text-xs font-mono text-slate-700 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => copyToClipboard(productGroupLink)}
+              className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium text-xs rounded-lg transition-colors cursor-pointer"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Product URLs Table */}
+      <div className="space-y-2">
+        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider m-0">
+          Product URLs
+        </h4>
+        <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold">
+              <tr>
+                <th className="py-2.5 px-4">URL</th>
+                <th className="py-2.5 px-4 w-32 text-center">Visits</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              <tr>
+                <td className="py-2.5 px-4 font-mono text-slate-600 break-all">
+                  {directCartLink}
+                </td>
+                <td className="py-2.5 px-4 text-center font-bold text-slate-700">
+                  0
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
