@@ -35,3 +35,6 @@ export const getAllProducts = () => apiClient.get("/product-master");
 export const createProduct = (data) => apiClient.post("/product-master", data);
 export const updateProduct = (id, data) => apiClient.put(`/product-master/${id}`, data);
 export const deleteProduct = (id) => apiClient.delete(`/product-master/${id}`);
+export const getProductConfigDetails = (productId) => apiClient.get(`/product-config-details/${productId}`);
+export const saveProductConfigDetails = (productId, data) => apiClient.post(`/product-config-details/${productId}`, data);
+

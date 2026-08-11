@@ -20,6 +20,7 @@ const resellerMasterRoutes = require("./routes/resellerMasterRoutes.js");
 const masterCreatorRoutes = require("./routes/masterCreatorRoutes.js");
 const productServiceGroupMasterRoutes = require("./routes/productServiceGroupMasterRoutes.js");
 const productMasterRoutes = require("./routes/productMasterRoutes.js");
+const productConfigDetailsRoutes = require("./routes/productConfigDetailsRoutes.js");
 
 // Model Initializations
 const { initUserModel } = require("./models/userModel.js");
@@ -38,6 +39,7 @@ const { createResellerMasterTables } = require("./models/resellerMasterModel.js"
 const { createMasterCreatorTables } = require("./models/masterCreatorModel.js");
 const { createProductServiceGroupMasterTables } = require("./models/productServiceGroupMasterModel.js");
 const { createProductMasterTables } = require("./models/productMasterModel.js");
+const { createProductConfigDetailsTables } = require("./models/productConfigDetailsModel.js");
 
 const app = express();
 
@@ -90,6 +92,7 @@ app.use(["/api/reseller-master", "/reseller-master"], resellerMasterRoutes);
 app.use(["/api/master-creator", "/master-creator"], masterCreatorRoutes);
 app.use(["/api/product-services", "/product-services"], productServiceGroupMasterRoutes);
 app.use(["/api/product-master", "/product-master"], productMasterRoutes);
+app.use(["/api/product-config-details", "/product-config-details"], productConfigDetailsRoutes);
 
 // Global 404 handler
 app.use((req, res) => {
@@ -124,6 +127,7 @@ const startServer = async () => {
         await createMasterCreatorTables();
         await createProductServiceGroupMasterTables();
         await createProductMasterTables();
+        await createProductConfigDetailsTables();
 
         console.log("All database tables are initialized and ready.");
 
