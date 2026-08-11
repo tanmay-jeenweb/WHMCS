@@ -20,7 +20,7 @@ export default function LinksTab({ row, url }) {
   return (
     <div className="space-y-6 font-sans">
       <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100 text-xs sm:text-sm">
-        
+
         {/* Direct Shopping Cart Link */}
         <div className="grid grid-cols-1 sm:grid-cols-5 py-3.5 px-4 bg-white items-center gap-2 sm:gap-4">
           <div className="sm:col-span-1 sm:text-right font-semibold text-slate-700">
@@ -112,7 +112,7 @@ export default function LinksTab({ row, url }) {
       </div>
 
       {/* Product URLs Table */}
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider m-0">
           Product URLs
         </h4>
@@ -136,7 +136,7 @@ export default function LinksTab({ row, url }) {
             </tbody>
           </table>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
