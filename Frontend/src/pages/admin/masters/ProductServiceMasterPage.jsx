@@ -65,105 +65,94 @@ function ProductServiceForm({ row, onClose, onSave, saving }) {
   };
 
   return (
-    <div className="flex flex-col flex-1 font-sans" style={{ background: "linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%)" }}>
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-md w-full mx-auto my-6">
-        {/* Form Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800 m-0">
-              {isEdit ? "Edit Product/Service" : "Create Product/Service"}
-            </h2>
-            <p className="text-slate-500 mt-1 text-sm">
-              Configure product details, custom store urls, headlines, and client portal taglines.
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="flex items-center gap-1.5 text-slate-500 bg-transparent border-none cursor-pointer text-sm font-medium hover:text-slate-700 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Back to Directory
-          </button>
+    <div className="flex-1 font-sans text-slate-900">
+      {/* Form Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {isEdit ? "Edit Product/Service Group" : "Create Product/Service Group"}
+          </h1>
+          <p className="text-slate-500 mt-1">
+            Configure product details, custom store urls, headlines, and client portal taglines.
+          </p>
         </div>
+        <button
+          onClick={onClose}
+          className="text-slate-500 hover:text-slate-700 font-medium text-sm flex items-center gap-1 transition-colors bg-transparent border-none cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
+          Back to Directory
+        </button>
+      </div>
 
+      {/* Form Container */}
+      <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Section 1: Product Definition */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Product Core Info</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1.5">
-                <label className="block text-[13px] font-semibold text-slate-700">
-                  Product / Service Name <span className="text-rose-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Web Hosting, VPS, Dedicated Servers"
-                  value={name}
-                  onChange={handleNameChange}
-                  required
-                  className="w-full box-border border-[1.5px] border-slate-300 rounded-xl py-3 px-4 text-sm outline-none text-slate-800 transition-all focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-[13px] font-semibold text-slate-700">
-                  Custom Store URL <span className="text-rose-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder={BASE_URL_PREFIX + "slug"}
-                  value={url}
-                  onChange={handleUrlChange}
-                  required
-                  className="w-full box-border border-[1.5px] border-slate-300 rounded-xl py-3 px-4 text-sm font-mono outline-none text-slate-800 transition-all focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                />
-                <p className="text-[11px] text-slate-500">
-                  {!isUrlDirty ? "⚡ Auto-calculated from name." : "✏️ Custom URL entered."}{" "}
-                  <button 
-                    type="button" 
-                    onClick={() => { setIsUrlDirty(false); setUrl(BASE_URL_PREFIX + slugify(name)); }} 
-                    className="text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer text-[11px]"
-                  >
-                    Reset to Auto
-                  </button>
-                </p>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Product / Service Group Name <span className="text-rose-600">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Web Hosting, VPS, Dedicated Servers"
+                value={name}
+                onChange={handleNameChange}
+                required
+                className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm outline-none"
+              />
             </div>
-          </div>
 
-          {/* Section 2: Store Branding */}
-          <div className="space-y-4 pt-4 border-t border-slate-100">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Store Portal Display Content</h3>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Custom Store URL <span className="text-rose-600">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder={BASE_URL_PREFIX + "slug"}
+                value={url}
+                onChange={handleUrlChange}
+                required
+                className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono outline-none"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">
+                {!isUrlDirty ? "⚡ Auto-calculated from name." : "✏️ Custom URL entered."}{" "}
+                <button 
+                  type="button" 
+                  onClick={() => { setIsUrlDirty(false); setUrl(BASE_URL_PREFIX + slugify(name)); }} 
+                  className="text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer text-[11px]"
+                >
+                  Reset to Auto
+                </button>
+              </p>
+            </div>
 
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="block text-[13px] font-semibold text-slate-700">
-                  Product Group Headline
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Host Your Brand With Fast SSD Storage Servers"
-                  value={headline}
-                  onChange={(e) => setHeadline(e.target.value)}
-                  className="w-full box-border border-[1.5px] border-slate-300 rounded-xl py-3 px-4 text-sm outline-none text-slate-800 transition-all focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Product Group Headline
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Host Your Brand With Fast SSD Storage Servers"
+                value={headline}
+                onChange={(e) => setHeadline(e.target.value)}
+                className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm outline-none"
+              />
+            </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-[13px] font-semibold text-slate-700">
-                  Product Group Tagline
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="e.g. Choose from our premium cloud systems, fully managed by industry experts. Instant setup with 99.9% uptime guarantee."
-                  value={tagline}
-                  onChange={(e) => setTagline(e.target.value)}
-                  className="w-full box-border border-[1.5px] border-slate-300 rounded-xl py-3 px-4 text-sm outline-none text-slate-800 transition-all focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Product Group Tagline
+              </label>
+              <textarea
+                rows={3}
+                placeholder="e.g. Choose from our premium cloud systems, fully managed by industry experts. Instant setup with 99.9% uptime guarantee."
+                value={tagline}
+                onChange={(e) => setTagline(e.target.value)}
+                className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm outline-none"
+              />
             </div>
           </div>
 
@@ -173,20 +162,16 @@ function ProductServiceForm({ row, onClose, onSave, saving }) {
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="py-2.5 px-6 rounded-xl border-[1.5px] border-slate-300 text-slate-600 bg-white font-semibold text-sm cursor-pointer transition-all hover:bg-slate-50 disabled:opacity-50"
+              className="py-2 px-4 border border-slate-300 rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 font-semibold text-sm cursor-pointer transition-all disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving || !name.trim() || !url.trim()}
-              className={`py-2.5 px-8 rounded-xl border-none text-white font-bold text-sm transition-all duration-200 ${saving ? "bg-slate-400 cursor-not-allowed" : "cursor-pointer"}`}
-              style={{
-                background: saving ? undefined : "linear-gradient(135deg,#0056cf,#0040a1)",
-                boxShadow: saving ? "none" : "0 2px 8px rgba(0, 86, 207,0.35)"
-              }}
+              className="flex justify-center py-2.5 px-6 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#0056cf] hover:bg-[#0040a1] focus:ring-2 focus:ring-offset-2 focus:ring-[#0056cf] disabled:opacity-50 transition-colors cursor-pointer"
             >
-              {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Product"}
+              {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Group"}
             </button>
           </div>
         </form>
