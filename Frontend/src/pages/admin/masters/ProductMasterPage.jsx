@@ -131,12 +131,12 @@ function ProductForm({ row, productGroups, onClose, onSave, saving }) {
 
   return (
     <div className="flex flex-col flex-1 font-sans" style={{ background: "linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%)" }}>
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-md max-w-4xl w-full mx-auto my-6">
+      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-md w-full mx-auto my-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
           <div>
             <h2 className="text-xl font-bold text-slate-800 m-0">
-              {isEdit ? "✏️ Edit Product/Service" : "✨ Create Product/Service Master"}
+              {isEdit ? "Edit Product/Service" : "Create Product/Service"}
             </h2>
             <p className="text-slate-500 mt-1 text-sm">
               Configure product details, product type, group assignment, store link, and module integration.
@@ -576,7 +576,6 @@ export default function ProductMasterPage() {
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: 16, height: 16 }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
-                  Create Product
                 </button>
               }
             />

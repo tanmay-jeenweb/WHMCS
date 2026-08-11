@@ -66,12 +66,12 @@ function ProductServiceForm({ row, onClose, onSave, saving }) {
 
   return (
     <div className="flex flex-col flex-1 font-sans" style={{ background: "linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%)" }}>
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-md max-w-4xl w-full mx-auto my-6">
+      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-md w-full mx-auto my-6">
         {/* Form Header */}
         <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
           <div>
             <h2 className="text-xl font-bold text-slate-800 m-0">
-              {isEdit ? "✏️ Edit Product/Service" : "✨ Create Product/Service"}
+              {isEdit ? "Edit Product/Service" : "Create Product/Service"}
             </h2>
             <p className="text-slate-500 mt-1 text-sm">
               Configure product details, custom store urls, headlines, and client portal taglines.
