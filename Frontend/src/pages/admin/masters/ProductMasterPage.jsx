@@ -9,6 +9,7 @@ import {
 import { getAllProductServices } from "../../../api/productServiceMasterApi";
 import DataTable from "../../../components/DataTable";
 import toast from "react-hot-toast";
+import ProductConfigForm from "./ProductConfigForm";
 
 const BASE_STORE_PREFIX = "https://8eb806de-74b5-4eff-ad59-147bf43e9700.package.webpros.cloud/index.php?rp=/store/";
 
@@ -38,7 +39,7 @@ const MODULE_OPTIONS = [
   "cPanel"
 ];
 
-// ─── Create/Edit Form Component ──────────────────────────────────────────────
+// ─── Simple Create/Edit Form Component ─────────────────────────────────────────
 function ProductForm({ row, productGroups, onClose, onSave, saving }) {
   const isEdit = !!row;
 
@@ -130,169 +131,160 @@ function ProductForm({ row, productGroups, onClose, onSave, saving }) {
   };
 
   return (
-    <div className="flex flex-col flex-1 font-sans" style={{ background: "linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%)" }}>
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-md max-w-4xl w-full mx-auto my-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-          <div>
-            <h2 className="text-xl font-bold text-slate-800 m-0">
-              {isEdit ? "✏️ Edit Product/Service" : "✨ Create Product/Service Master"}
-            </h2>
-            <p className="text-slate-500 mt-1 text-sm">
-              Configure product details, product type, group assignment, store link, and module integration.
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="flex items-center gap-1.5 text-slate-500 bg-transparent border-none cursor-pointer text-sm font-medium hover:text-slate-700 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Back to Directory
-          </button>
+    <div className="flex-1 font-sans text-slate-900">
+      {/* Form Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {isEdit ? "Edit Product/Service" : "Create Product/Service"}
+          </h1>
+          <p className="text-slate-500 mt-1">
+            Configure product details, product type, group assignment, store link, and module integration.
+          </p>
         </div>
+        <button
+          onClick={onClose}
+          className="text-slate-500 hover:text-slate-700 font-medium text-sm flex items-center gap-1 transition-colors bg-transparent border-none cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
+          Back to Directory
+        </button>
+      </div>
 
+      {/* Form Container */}
+      <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Section 1: Product Core Details */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Product Core Info</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Product Name */}
-              <div className="space-y-1.5">
-                <label className="block text-[13px] font-semibold text-slate-700">
-                  Product Name <span className="text-rose-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Starter Shared Plan, Deluxe cPanel"
-                  value={productName}
-                  onChange={handleNameChange}
-                  required
-                  className="w-full box-border border-[1.5px] border-slate-300 rounded-xl py-3 px-4 text-sm outline-none text-slate-800 transition-all focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
-
-              {/* Product Group Dropdown */}
-              <div className="space-y-1.5">
-                <label className="block text-[13px] font-semibold text-slate-700">
-                  Product Group <span className="text-rose-600">*</span>
-                </label>
-                {productGroups.length === 0 ? (
-                  <div className="text-xs text-amber-600 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-                    No product groups found. Please create a Product/Service Group first.
-                  </div>
-                ) : (
-                  <select
-                    value={productGroupName}
-                    onChange={handleGroupChange}
-                    required
-                    className="w-full box-border border-[1.5px] border-slate-300 rounded-xl py-3 px-4 text-sm outline-none text-slate-800 bg-white transition-all focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                  >
-                    <option value="" disabled>-- Select Product Group --</option>
-                    {productGroups.map((group) => (
-                      <option key={group.id} value={group.name}>
-                        {group.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <p className="text-[11px] text-slate-500">
-                  Populated from Product/Service Group Master
-                </p>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            
+            {/* Product Name */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Product Name <span className="text-rose-600">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Starter Shared Plan, Deluxe cPanel"
+                value={productName}
+                onChange={handleNameChange}
+                required
+                className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm outline-none"
+              />
             </div>
-          </div>
 
-          {/* Section 2: Product Type (Radio Buttons) */}
-          <div className="space-y-3 pt-4 border-t border-slate-100">
-            <label className="block text-[13px] font-semibold text-slate-700">
-              Product Type <span className="text-rose-600">*</span>
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {PRODUCT_TYPES.map((type) => {
-                const isSelected = productType === type.label;
-                return (
-                  <label
-                    key={type.id}
-                    className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all ${
-                      isSelected
-                        ? "border-blue-600 bg-blue-50/70 text-blue-900 shadow-sm ring-2 ring-blue-100"
-                        : "border-slate-200 bg-slate-50/50 text-slate-700 hover:bg-slate-100/60"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="product_type"
-                      value={type.label}
-                      checked={isSelected}
-                      onChange={() => setProductType(type.label)}
-                      className="w-4 h-4 text-blue-600 accent-blue-600 focus:ring-blue-500"
-                    />
-                    <div className="flex items-center gap-2">
-                      <i className={`fa-solid ${type.icon} text-sm ${isSelected ? "text-blue-600" : "text-slate-400"}`}></i>
-                      <span className="text-xs font-semibold">{type.label}</span>
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Section 3: Store URL & Module Integration */}
-          <div className="space-y-4 pt-4 border-t border-slate-100">
-            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Store Link & Module</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* URL */}
-              <div className="space-y-1.5 md:col-span-2">
-                <label className="block text-[13px] font-semibold text-slate-700">
-                  URL <span className="text-rose-600">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="https://.../index.php?rp=/store/group-name/product-name"
-                  value={url}
-                  onChange={handleUrlChange}
-                  required
-                  className="w-full box-border border-[1.5px] border-slate-300 rounded-xl py-3 px-4 text-sm font-mono outline-none text-slate-800 transition-all focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
-                />
-                <p className="text-[11px] text-slate-500 flex items-center justify-between">
-                  <span>
-                    {!isUrlDirty ? "⚡ Auto-formatted from Product Group and Product Name." : "✏️ Custom URL entered."}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleResetUrl}
-                    className="text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer text-[11px] font-medium"
-                  >
-                    Reset to Auto
-                  </button>
-                </p>
-              </div>
-
-              {/* Module */}
-              <div className="space-y-1.5">
-                <label className="block text-[13px] font-semibold text-slate-700">
-                  Module
-                </label>
+            {/* Product Group Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Product Group <span className="text-rose-600">*</span>
+              </label>
+              {productGroups.length === 0 ? (
+                <div className="text-xs text-amber-600 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                  No product groups found. Please create a Product/Service Group first.
+                </div>
+              ) : (
                 <select
-                  value={moduleName}
-                  onChange={(e) => setModuleName(e.target.value)}
-                  className="w-full box-border border-[1.5px] border-slate-300 rounded-xl py-3 px-4 text-sm outline-none text-slate-800 bg-white transition-all focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  value={productGroupName}
+                  onChange={handleGroupChange}
+                  required
+                  className="block w-full px-3 py-2 border border-slate-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
-                  {MODULE_OPTIONS.map((mod) => (
-                    <option key={mod} value={mod}>
-                      {mod}
+                  <option value="" disabled>-- Select Product Group --</option>
+                  {productGroups.map((group) => (
+                    <option key={group.id} value={group.name}>
+                      {group.name}
                     </option>
                   ))}
                 </select>
-                <p className="text-[11px] text-slate-500">
-                  Select server provisioning module (e.g. cPanel)
-                </p>
+              )}
+              <p className="text-[11px] text-slate-500 mt-1">
+                Populated from Product/Service Group Master
+              </p>
+            </div>
+
+            {/* Product Type (Radio Buttons) */}
+            <div className="sm:col-span-2 space-y-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Product Type <span className="text-rose-600">*</span>
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {PRODUCT_TYPES.map((type) => {
+                  const isSelected = productType === type.label;
+                  return (
+                    <label
+                      key={type.id}
+                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                        isSelected
+                          ? "border-blue-600 bg-blue-50/70 text-blue-900 shadow-sm ring-2 ring-blue-100"
+                          : "border-slate-200 bg-slate-50/50 text-slate-700 hover:bg-slate-100/60"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="product_type"
+                        value={type.label}
+                        checked={isSelected}
+                        onChange={() => setProductType(type.label)}
+                        className="w-4 h-4 text-blue-600 accent-blue-600 focus:ring-blue-500"
+                      />
+                      <div className="flex items-center gap-2">
+                        <i className={`fa-solid ${type.icon} text-sm ${isSelected ? "text-blue-600" : "text-slate-400"}`}></i>
+                        <span className="text-xs font-semibold">{type.label}</span>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
             </div>
+
+            {/* URL */}
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Store URL Link <span className="text-rose-600">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="https://.../index.php?rp=/store/group-name/product-name"
+                value={url}
+                onChange={handleUrlChange}
+                required
+                className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm font-mono outline-none"
+              />
+              <p className="text-[11px] text-slate-500 mt-1 flex items-center justify-between">
+                <span>
+                  {!isUrlDirty ? "⚡ Auto-formatted from Product Group and Product Name." : "✏️ Custom URL entered."}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleResetUrl}
+                  className="text-blue-600 hover:text-blue-800 underline bg-transparent border-none cursor-pointer text-[11px] font-medium"
+                >
+                  Reset to Auto
+                </button>
+              </p>
+            </div>
+
+            {/* Module */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Module
+              </label>
+              <select
+                value={moduleName}
+                onChange={(e) => setModuleName(e.target.value)}
+                className="block w-full px-3 py-2 border border-slate-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              >
+                {MODULE_OPTIONS.map((mod) => (
+                  <option key={mod} value={mod}>
+                    {mod}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Select server provisioning module (e.g. cPanel)
+              </p>
+            </div>
+
           </div>
 
           {/* Form Actions */}
@@ -300,14 +292,14 @@ function ProductForm({ row, productGroups, onClose, onSave, saving }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors cursor-pointer"
+              className="py-2 px-4 border border-slate-300 rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 font-semibold text-sm cursor-pointer transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2.5 rounded-xl border-none bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-bold shadow-md shadow-blue-500/20 hover:from-blue-700 hover:to-blue-800 transition-all cursor-pointer disabled:opacity-50"
+              className="flex justify-center py-2.5 px-6 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#0056cf] hover:bg-[#0040a1] focus:ring-2 focus:ring-offset-2 focus:ring-[#0056cf] disabled:opacity-50 transition-colors cursor-pointer"
             >
               {saving ? "Saving..." : isEdit ? "Update Product" : "Create Product"}
             </button>
@@ -325,6 +317,7 @@ export default function ProductMasterPage() {
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingRow, setEditingRow] = useState(null);
+  const [configuringRow, setConfiguringRow] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const loadData = async () => {
@@ -492,7 +485,7 @@ export default function ProductMasterPage() {
         key: "actions",
         label: "Actions",
         sortable: false,
-        minWidth: "120px",
+        minWidth: "160px",
         render: (row) => (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
@@ -503,6 +496,17 @@ export default function ProductMasterPage() {
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" style={{ width: 15, height: 15 }}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931Z" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setConfiguringRow(row)}
+              style={{ display: "flex", width: 32, height: 32, alignItems: "center", justifyCenter: "center", borderRadius: 8, border: "1px solid #bbf7d0", background: "#f0fdf4", color: "#16a34a", cursor: "pointer", padding: 0 }}
+              className="hover:bg-green-100/50 flex items-center justify-center"
+              title="Configure Options"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" style={{ width: 15, height: 15 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
               </svg>
             </button>
             <button
@@ -519,7 +523,7 @@ export default function ProductMasterPage() {
         )
       }
     ];
-  }, []);
+  }, [items]); // Add items to dependencies
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, background: "#f8fafc", fontFamily: "'Inter',sans-serif" }}>
@@ -528,7 +532,14 @@ export default function ProductMasterPage() {
       <main style={{ flex: 1, display: "flex", flexDirection: "column", width: "100%", margin: "0 auto", padding: "32px 30px" }}>
         
         {/* View Routing */}
-        {editingRow ? (
+        {configuringRow ? (
+          <ProductConfigForm
+            row={configuringRow}
+            productGroups={productGroups}
+            items={items}
+            onClose={() => setConfiguringRow(null)}
+          />
+        ) : editingRow ? (
           <ProductForm
             row={editingRow}
             productGroups={productGroups}
@@ -559,7 +570,7 @@ export default function ProductMasterPage() {
                     display: "flex",
                     height: 40,
                     alignItems: "center",
-                    justifyContent: "center",
+                    justifyCenter: "center",
                     borderRadius: 9,
                     background: "linear-gradient(135deg,#0056cf,#0040a1)",
                     color: "#fff",
@@ -576,7 +587,6 @@ export default function ProductMasterPage() {
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: 16, height: 16 }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
-                  Create Product
                 </button>
               }
             />

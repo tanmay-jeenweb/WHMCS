@@ -116,15 +116,7 @@ export default function SecurityMasterPage() {
             <h1 className="text-2xl font-bold text-slate-900">Security Master</h1>
             <p className="text-slate-500 mt-1">Configure CAPTCHA protections, IP bans, Whitelists, password strength scores, and session controls.</p>
           </div>
-          <button
-            onClick={() => navigate("/admin/dashboard")}
-            className="text-slate-500 hover:text-slate-700 font-medium text-sm flex items-center gap-1 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Back to Dashboard
-          </button>
+        
         </div>
 
         {/* Form Container */}
