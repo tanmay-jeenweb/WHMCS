@@ -21,6 +21,13 @@ const masterCreatorRoutes = require("./routes/masterCreatorRoutes.js");
 const productServiceGroupMasterRoutes = require("./routes/productServiceGroupMasterRoutes.js");
 const productMasterRoutes = require("./routes/productMasterRoutes.js");
 const productConfigDetailsRoutes = require("./routes/productConfigDetailsRoutes.js");
+const productConfigPricingRoutes = require("./routes/productConfigPricingRoutes.js");
+const productConfigModuleRoutes = require("./routes/productConfigModuleRoutes.js");
+const productConfigCustomFieldsRoutes = require("./routes/productConfigCustomFieldsRoutes.js");
+const productConfigOptionsRoutes = require("./routes/productConfigOptionsRoutes.js");
+const productConfigUpgradesRoutes = require("./routes/productConfigUpgradesRoutes.js");
+const productConfigCrossSellsRoutes = require("./routes/productConfigCrossSellsRoutes.js");
+const productConfigLinksRoutes = require("./routes/productConfigLinksRoutes.js");
 
 // Model Initializations
 const { initUserModel } = require("./models/userModel.js");
@@ -40,6 +47,13 @@ const { createMasterCreatorTables } = require("./models/masterCreatorModel.js");
 const { createProductServiceGroupMasterTables } = require("./models/productServiceGroupMasterModel.js");
 const { createProductMasterTables } = require("./models/productMasterModel.js");
 const { createProductConfigDetailsTables } = require("./models/productConfigDetailsModel.js");
+const { createProductConfigPricingTables } = require("./models/productConfigPricingModel.js");
+const { createProductConfigModuleTables } = require("./models/productConfigModuleModel.js");
+const { createProductConfigCustomFieldsTables } = require("./models/productConfigCustomFieldsModel.js");
+const { createProductConfigOptionsTables } = require("./models/productConfigOptionsModel.js");
+const { createProductConfigUpgradesTables } = require("./models/productConfigUpgradesModel.js");
+const { createProductConfigCrossSellsTables } = require("./models/productConfigCrossSellsModel.js");
+const { createProductConfigLinksTables } = require("./models/productConfigLinksModel.js");
 
 const app = express();
 
@@ -93,6 +107,13 @@ app.use(["/api/master-creator", "/master-creator"], masterCreatorRoutes);
 app.use(["/api/product-services", "/product-services"], productServiceGroupMasterRoutes);
 app.use(["/api/product-master", "/product-master"], productMasterRoutes);
 app.use(["/api/product-config-details", "/product-config-details"], productConfigDetailsRoutes);
+app.use(["/api/product-config-pricing", "/product-config-pricing"], productConfigPricingRoutes);
+app.use(["/api/product-config-module", "/product-config-module"], productConfigModuleRoutes);
+app.use(["/api/product-config-customfields", "/product-config-customfields"], productConfigCustomFieldsRoutes);
+app.use(["/api/product-config-options", "/product-config-options"], productConfigOptionsRoutes);
+app.use(["/api/product-config-upgrades", "/product-config-upgrades"], productConfigUpgradesRoutes);
+app.use(["/api/product-config-crosssells", "/product-config-crosssells"], productConfigCrossSellsRoutes);
+app.use(["/api/product-config-links", "/product-config-links"], productConfigLinksRoutes);
 
 // Global 404 handler
 app.use((req, res) => {
@@ -128,6 +149,13 @@ const startServer = async () => {
         await createProductServiceGroupMasterTables();
         await createProductMasterTables();
         await createProductConfigDetailsTables();
+        await createProductConfigPricingTables();
+        await createProductConfigModuleTables();
+        await createProductConfigCustomFieldsTables();
+        await createProductConfigOptionsTables();
+        await createProductConfigUpgradesTables();
+        await createProductConfigCrossSellsTables();
+        await createProductConfigLinksTables();
 
         console.log("All database tables are initialized and ready.");
 

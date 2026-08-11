@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { getProductConfigDetails, saveProductConfigDetails } from "../../../api/productMasterApi.js";
+import { 
+  getProductConfigDetails, 
+  saveProductConfigDetails,
+  getProductConfigPricing,
+  saveProductConfigPricing,
+  getProductConfigModule,
+  saveProductConfigModule,
+  getProductConfigCustomFields,
+  saveProductConfigCustomFields,
+  getProductConfigOptions,
+  saveProductConfigOptions,
+  getProductConfigUpgrades,
+  saveProductConfigUpgrades,
+  getProductConfigCrossSells,
+  saveProductConfigCrossSells,
+  getProductConfigLinks,
+  saveProductConfigLinks
+} from "../../../api/productMasterApi.js";
 
 // Tab Sub-components
 import DetailsTab from "./config/DetailsTab.jsx";
@@ -107,13 +124,23 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
     { id: "links", label: "Links" }
   ];
 
-  // Fetch product configuration details from backend on mount/row change
+  // Fetch product configurations from separate backend endpoints on mount/row change
   useEffect(() => {
     if (row?.id) {
-      getProductConfigDetails(row.id)
-        .then((res) => {
-          if (res.data?.success && res.data.data) {
-            const d = res.data.data;
+      Promise.all([
+        getProductConfigDetails(row.id),
+        getProductConfigPricing(row.id),
+        getProductConfigModule(row.id),
+        getProductConfigCustomFields(row.id),
+        getProductConfigOptions(row.id),
+        getProductConfigUpgrades(row.id),
+        getProductConfigCrossSells(row.id),
+        getProductConfigLinks(row.id)
+      ])
+        .then(([resDetails, resPricing, resModule, resCustomFields, resOptions, resUpgrades, resCrossSells, resLinks]) => {
+          // Details
+          if (resDetails.data?.success && resDetails.data.data) {
+            const d = resDetails.data.data;
             setProductTagline(d.product_tagline || "");
             setShortDescription(d.short_description || "");
             setDescription(d.description || "");
@@ -126,73 +153,91 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
             setEnableStock(d.enable_stock === 1);
             setStockQty(d.stock_qty || 0);
             setRetired(d.retired === 1);
-
-            // Pricing fields
-            setPaymentType(d.payment_type || "recurring");
-            setMonthlyPrice(d.monthly_price || "");
-            setMonthlySetup(d.monthly_setup || "");
-            setQuarterlyPrice(d.quarterly_price || "");
-            setQuarterlySetup(d.quarterly_setup || "");
-            setSemiannuallyPrice(d.semiannually_price || "");
-            setSemiannuallySetup(d.semiannually_setup || "");
-            setAnnuallyPrice(d.annually_price || "");
-            setAnnuallySetup(d.annually_setup || "");
-            setBienniallyPrice(d.biennially_price || "");
-            setBienniallySetup(d.biennially_setup || "");
-            setTrienniallyPrice(d.triennially_price || "");
-            setTrienniallySetup(d.triennially_setup || "");
-
-            setAllowMultipleQuantities(d.allow_multiple_quantities || "no");
-            setRecurringCyclesLimit(d.recurring_cycles_limit ?? 0);
-            setFixedTerm(d.auto_terminate_fixed_term ?? 0);
-            setTerminationEmail(d.termination_email || "None");
-            setProrataBilling(d.prorata_billing === 1);
-            setProrataDate(d.prorata_date ?? 0);
-            setChargeNextMonth(d.charge_next_month ?? 0);
-            setOnDemandRenewals(d.ondemand_renewals || "system_default");
-            setAllowEarlyRenewals(d.allow_early_renewals === 1);
-            setEarlyRenewalMonthly(d.early_renewal_monthly ?? 31);
-            setEarlyRenewalQuarterly(d.early_renewal_quarterly ?? 92);
-            setEarlyRenewalSemiannually(d.early_renewal_semiannually ?? 184);
-            setEarlyRenewalAnnually(d.early_renewal_annually ?? 366);
-            setEarlyRenewalBiennially(d.early_renewal_biennially ?? 731);
-            setEarlyRenewalTriennially(d.early_renewal_triennially ?? 1096);
-
-            // Module Settings
-            setServerGroup(d.server_group || "None");
-            setCpanelPackage(d.cpanel_package || "");
-            setCpanelQuota(d.cpanel_quota || "");
-            setCpanelBandwidth(d.cpanel_bandwidth || "");
-            setCpanelMaxFtp(d.cpanel_max_ftp || "");
-            setProvisionType(d.provision_type || "manual");
-
-            // Configurable Options
-            setAssignedOptionGroups(d.assigned_option_groups || "");
-
-            // Upgrade Settings
-            let parsedPackages = [];
-            if (typeof d.upgrade_packages === 'string') {
-              try { parsedPackages = JSON.parse(d.upgrade_packages); } catch(e) { parsedPackages = []; }
-            } else if (Array.isArray(d.upgrade_packages)) {
-              parsedPackages = d.upgrade_packages;
+          }
+          // Pricing
+          if (resPricing.data?.success && resPricing.data.data) {
+            const p = resPricing.data.data;
+            setPaymentType(p.payment_type || "recurring");
+            setMonthlyPrice(p.monthly_price || "");
+            setMonthlySetup(p.monthly_setup || "");
+            setQuarterlyPrice(p.quarterly_price || "");
+            setQuarterlySetup(p.quarterly_setup || "");
+            setSemiannuallyPrice(p.semiannually_price || "");
+            setSemiannuallySetup(p.semiannually_setup || "");
+            setAnnuallyPrice(p.annually_price || "");
+            setAnnuallySetup(p.annually_setup || "");
+            setBienniallyPrice(p.biennially_price || "");
+            setBienniallySetup(p.biennially_setup || "");
+            setTrienniallyPrice(p.triennially_price || "");
+            setTrienniallySetup(p.triennially_setup || "");
+            setAllowMultipleQuantities(p.allow_multiple_quantities || "no");
+            setRecurringCyclesLimit(p.recurring_cycles_limit ?? 0);
+            setFixedTerm(p.fixed_term ?? 0);
+            setTerminationEmail(p.termination_email || "None");
+            setProrataBilling(p.prorata_billing === 1);
+            setProrataDate(p.prorata_date ?? 0);
+            setChargeNextMonth(p.charge_next_month ?? 0);
+            setOnDemandRenewals(p.ondemand_renewals || "system_default");
+            setAllowEarlyRenewals(p.allow_early_renewals === 1);
+            setEarlyRenewalMonthly(p.early_renewal_monthly ?? 31);
+            setEarlyRenewalQuarterly(p.early_renewal_quarterly ?? 92);
+            setEarlyRenewalSemiannually(p.early_renewal_semiannually ?? 184);
+            setEarlyRenewalAnnually(p.early_renewal_annually ?? 366);
+            setEarlyRenewalBiennially(p.early_renewal_biennially ?? 731);
+            setEarlyRenewalTriennially(p.early_renewal_triennially ?? 1096);
+          }
+          // Module Settings
+          if (resModule.data?.success && resModule.data.data) {
+            const m = resModule.data.data;
+            setServerGroup(m.server_group || "None");
+            setCpanelPackage(m.cpanel_package || "");
+            setCpanelQuota(m.cpanel_quota || "");
+            setCpanelBandwidth(m.cpanel_bandwidth || "");
+            setCpanelMaxFtp(m.cpanel_max_ftp || "");
+            setProvisionType(m.provision_type || "manual");
+          }
+          // Custom Fields
+          if (resCustomFields.data?.success && resCustomFields.data.data) {
+            setCustomFields(resCustomFields.data.data || []);
+          }
+          // Options
+          if (resOptions.data?.success && resOptions.data.data) {
+            try {
+              const opts = typeof resOptions.data.data.assigned_option_groups === 'string' 
+                ? JSON.parse(resOptions.data.data.assigned_option_groups) 
+                : (resOptions.data.data.assigned_option_groups || []);
+              setConfigurableOptions(opts);
+            } catch (e) {
+              setConfigurableOptions([]);
             }
-            setUpgradePackages(parsedPackages);
-            setUpgradeConfigOptions(d.upgrade_config_options === 1);
-            setUpgradeEmail(d.upgrade_email || "None");
-
-            // Cross-sells Settings
-            let parsedCrossSells = [];
-            if (typeof d.cross_sells === 'string') {
-              try { parsedCrossSells = JSON.parse(d.cross_sells); } catch(e) { parsedCrossSells = []; }
-            } else if (Array.isArray(d.cross_sells)) {
-              parsedCrossSells = d.cross_sells;
+          }
+          // Upgrades
+          if (resUpgrades.data?.success && resUpgrades.data.data) {
+            try {
+              const upgs = typeof resUpgrades.data.data.upgrade_packages === 'string' 
+                ? JSON.parse(resUpgrades.data.data.upgrade_packages) 
+                : (resUpgrades.data.data.upgrade_packages || []);
+              setUpgrades(upgs);
+            } catch (e) {
+              setUpgrades([]);
             }
-            setCrossSells(parsedCrossSells);
-
-            // Custom Fields
-            if (Array.isArray(d.custom_fields)) {
-              setCustomFields(d.custom_fields);
+            setUpgradeConfigOptions(resUpgrades.data.data.upgrade_config_options === 1);
+            setUpgradeEmail(resUpgrades.data.data.upgrade_email || "None");
+          }
+          // Cross-sells
+          if (resCrossSells.data?.success && resCrossSells.data.data) {
+            try {
+              const sells = typeof resCrossSells.data.data.cross_sells === 'string' 
+                ? JSON.parse(resCrossSells.data.data.cross_sells) 
+                : (resCrossSells.data.data.cross_sells || []);
+              setCrossSells(sells);
+            } catch (e) {
+              setCrossSells([]);
             }
+          }
+          // Links
+          if (resLinks.data?.success && resLinks.data.data) {
+            setCustomCheckoutUrl(resLinks.data.data.custom_checkout_url || "");
           }
         })
         .catch((err) => {
@@ -204,86 +249,84 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const detailsData = {
-        // Details
-        product_tagline: productTagline,
-        short_description: shortDescription,
-        description: description,
-        product_color: productColor,
-        welcome_email: welcomeEmail,
-        require_domain: requireDomain,
-        apply_tax: applyTax,
-        featured: featured,
-        hidden: hidden,
-        enable_stock: enableStock,
-        stock_qty: stockQty,
-        retired: retired,
+      await Promise.all([
+        saveProductConfigDetails(row.id, {
+          product_tagline: productTagline,
+          short_description: shortDescription,
+          description: description,
+          product_color: productColor,
+          welcome_email: welcomeEmail,
+          require_domain: requireDomain,
+          apply_tax: applyTax,
+          featured: featured,
+          hidden: hidden,
+          enable_stock: enableStock,
+          stock_qty: stockQty,
+          retired: retired
+        }),
+        saveProductConfigPricing(row.id, {
+          payment_type: paymentType,
+          monthly_price: monthlyPrice,
+          monthly_setup: monthlySetup,
+          quarterly_price: quarterlyPrice,
+          quarterly_setup: quarterlySetup,
+          semiannually_price: semiannuallyPrice,
+          semiannually_setup: semiannuallySetup,
+          annually_price: annuallyPrice,
+          annually_setup: annuallySetup,
+          biennially_price: bienniallyPrice,
+          biennially_setup: bienniallySetup,
+          triennially_price: trienniallyPrice,
+          triennially_setup: trienniallySetup,
+          allow_multiple_quantities: allowMultipleQuantities,
+          recurring_cycles_limit: recurringCyclesLimit,
+          auto_terminate_fixed_term: fixedTerm,
+          termination_email: terminationEmail,
+          prorata_billing: prorataBilling,
+          prorata_date: prorataDate,
+          charge_next_month: chargeNextMonth,
+          ondemand_renewals: onDemandRenewals,
+          allow_early_renewals: allowEarlyRenewals,
+          early_renewal_monthly: earlyRenewalMonthly,
+          early_renewal_quarterly: earlyRenewalQuarterly,
+          early_renewal_semiannually: earlyRenewalSemiannually,
+          early_renewal_annually: earlyRenewalAnnually,
+          early_renewal_biennially: earlyRenewalBiennially,
+          early_renewal_triennially: earlyRenewalTriennially
+        }),
+        saveProductConfigModule(row.id, {
+          server_group: serverGroup,
+          cpanel_package: cpanelPackage,
+          cpanel_quota: cpanelQuota,
+          cpanel_bandwidth: cpanelBandwidth,
+          cpanel_max_ftp: cpanelMaxFtp,
+          provision_type: provisionType,
+          module_name: moduleName
+        }),
+        saveProductConfigCustomFields(row.id, {
+          custom_fields: customFields
+        }),
+        saveProductConfigOptions(row.id, {
+          assigned_option_groups: configurableOptions
+        }),
+        saveProductConfigUpgrades(row.id, {
+          upgrade_packages: upgrades,
+          upgrade_config_options: upgradeConfigOptions,
+          upgrade_email: upgradeEmail
+        }),
+        saveProductConfigCrossSells(row.id, {
+          cross_sells: crossSells
+        }),
+        saveProductConfigLinks(row.id, {
+          custom_checkout_url: customCheckoutUrl
+        })
+      ]);
 
-        // Pricing
-        payment_type: paymentType,
-        monthly_price: monthlyPrice,
-        monthly_setup: monthlySetup,
-        quarterly_price: quarterlyPrice,
-        quarterly_setup: quarterlySetup,
-        semiannually_price: semiannuallyPrice,
-        semiannually_setup: semiannuallySetup,
-        annually_price: annuallyPrice,
-        annually_setup: annuallySetup,
-        biennially_price: bienniallyPrice,
-        biennially_setup: bienniallySetup,
-        triennially_price: trienniallyPrice,
-        triennially_setup: trienniallySetup,
-
-        allow_multiple_quantities: allowMultipleQuantities,
-        recurring_cycles_limit: recurringCyclesLimit,
-        auto_terminate_fixed_term: fixedTerm,
-        termination_email: terminationEmail,
-        prorata_billing: prorataBilling,
-        prorata_date: prorataDate,
-        charge_next_month: chargeNextMonth,
-        ondemand_renewals: onDemandRenewals,
-        allow_early_renewals: allowEarlyRenewals,
-        early_renewal_monthly: earlyRenewalMonthly,
-        early_renewal_quarterly: earlyRenewalQuarterly,
-        early_renewal_semiannually: earlyRenewalSemiannually,
-        early_renewal_annually: earlyRenewalAnnually,
-        early_renewal_biennially: earlyRenewalBiennially,
-        early_renewal_triennially: earlyRenewalTriennially,
-
-        // Module Settings
-        module_name: moduleName,
-        server_group: serverGroup,
-        cpanel_package: cpanelPackage,
-        cpanel_quota: cpanelQuota,
-        cpanel_bandwidth: cpanelBandwidth,
-        cpanel_max_ftp: cpanelMaxFtp,
-        provision_type: provisionType,
-
-        // Configurable Options
-        assigned_option_groups: assignedOptionGroups,
-
-        // Upgrade Settings
-        upgrade_packages: upgradePackages,
-        upgrade_config_options: upgradeConfigOptions,
-        upgrade_email: upgradeEmail,
-
-        // Cross Sells
-        cross_sells: crossSells,
-
-        // Custom Fields
-        custom_fields: customFields
-      };
-
-      const res = await saveProductConfigDetails(row.id, detailsData);
-      if (res.data?.success) {
-        toast.success("Product configuration details saved successfully!");
-      } else {
-        toast.error("Failed to save product details configuration.");
-      }
-      onClose();
+      toast.success("All configuration modules saved successfully!");
+      // onClose();
     } catch (error) {
-      console.error("Error saving product configuration details:", error);
-      toast.error("An error occurred while saving configuration details.");
+      console.error("Error saving configurations:", error);
+      toast.error("An error occurred while saving configuration modules.");
     }
   };
 
