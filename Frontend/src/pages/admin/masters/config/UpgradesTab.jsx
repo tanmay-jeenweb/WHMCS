@@ -1,9 +1,7 @@
 import React from "react";
 
 const UPGRADE_EMAIL_OPTIONS = [
-  "None",
-  "Product Upgrade Notice",
-  "Service Upgrade Confirmation"
+  "None"
 ];
 
 export default function UpgradesTab({
@@ -21,7 +19,7 @@ export default function UpgradesTab({
   return (
     <div className="space-y-6 font-sans">
       <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100 text-xs sm:text-sm">
-        
+
         {/* Packages Upgrades Multi-Select */}
         <div className="grid grid-cols-1 sm:grid-cols-5 py-3.5 px-4 bg-white items-start gap-2 sm:gap-4">
           <div className="sm:col-span-1 sm:text-right font-semibold text-slate-700 pt-1.5">
@@ -87,11 +85,7 @@ export default function UpgradesTab({
               onChange={(e) => setUpgradeEmail && setUpgradeEmail(e.target.value)}
               className="block w-64 px-3 py-1.5 border border-slate-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-xs"
             >
-              {UPGRADE_EMAIL_OPTIONS.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
+              <option value="None">None</option>
             </select>
           </div>
         </div>

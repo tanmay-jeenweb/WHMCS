@@ -15,7 +15,7 @@ export default function OptionsTab({
   return (
     <div className="space-y-6 font-sans">
       <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100 text-xs sm:text-sm">
-        
+
         {/* Assigned Option Groups Select Dropdown */}
         <div className="grid grid-cols-1 sm:grid-cols-5 py-3.5 px-4 bg-white items-center gap-2 sm:gap-4">
           <div className="sm:col-span-1 sm:text-right font-semibold text-slate-700">
