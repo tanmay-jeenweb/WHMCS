@@ -38,3 +38,25 @@ export const deleteProduct = (id) => apiClient.delete(`/product-master/${id}`);
 export const getProductConfigDetails = (productId) => apiClient.get(`/product-config-details/${productId}`);
 export const saveProductConfigDetails = (productId, data) => apiClient.post(`/product-config-details/${productId}`, data);
 
+export const getProductConfigPricing = (productId) => apiClient.get(`/product-config-pricing/${productId}`);
+export const saveProductConfigPricing = (productId, data) => apiClient.post(`/product-config-pricing/${productId}`, data);
+
+export const getProductConfigModule = (productId) => apiClient.get(`/product-config-module/${productId}`);
+export const saveProductConfigModule = (productId, data) => apiClient.post(`/product-config-module/${productId}`, data);
+
+export const getProductConfigCustomFields = (productId) => apiClient.get(`/product-config-customfields/${productId}`);
+export const saveProductConfigCustomFields = (productId, data) => apiClient.post(`/product-config-customfields/${productId}`, data);
+
+export const getProductConfigOptions = (productId) => apiClient.get(`/product-config-options/${productId}`);
+export const saveProductConfigOptions = (productId, data) => apiClient.post(`/product-config-options/${productId}`, data);
+
+export const getProductConfigUpgrades = (productId) => apiClient.get(`/product-config-upgrades/${productId}`);
+export const saveProductConfigUpgrades = (productId, data) => apiClient.post(`/product-config-upgrades/${productId}`, data);
+
+export const getProductConfigCrossSells = (productId) => apiClient.get(`/product-config-crosssells/${productId}`);
+export const saveProductConfigCrossSells = (productId, data) => apiClient.post(`/product-config-crosssells/${productId}`, data);
+
+export const getProductConfigLinks = (productId) => apiClient.get(`/product-config-links/${productId}`);
+export const saveProductConfigLinks = (productId, data) => apiClient.post(`/product-config-links/${productId}`, data);
+
+
