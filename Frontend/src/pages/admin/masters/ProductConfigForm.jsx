@@ -508,6 +508,7 @@ export default function ProductConfigForm({ row, productGroups, items = [], onCl
               <OptionsTab
                 assignedOptionGroups={assignedOptionGroups}
                 setAssignedOptionGroups={setAssignedOptionGroups}
+                productGroups={productGroups}
               />
             )}
 

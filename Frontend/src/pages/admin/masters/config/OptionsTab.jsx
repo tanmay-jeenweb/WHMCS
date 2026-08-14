@@ -1,16 +1,9 @@
 import React from "react";
 
-const OPTION_GROUPS = [
-  "None",
-  "cPanel Configurable Options",
-  "Server Resource Options",
-  "Web Hosting Upgrades",
-  "Virtual Private Server Options"
-];
-
 export default function OptionsTab({
   assignedOptionGroups = "None",
-  setAssignedOptionGroups
+  setAssignedOptionGroups,
+  productGroups = []
 }) {
   return (
     <div className="space-y-6 font-sans">
@@ -27,9 +20,10 @@ export default function OptionsTab({
               onChange={(e) => setAssignedOptionGroups && setAssignedOptionGroups(e.target.value)}
               className="block w-full sm:w-80 px-3 py-1.5 border border-slate-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-xs"
             >
-              {OPTION_GROUPS.map((group) => (
-                <option key={group} value={group}>
-                  {group}
+              <option value="None">None</option>
+              {productGroups.map((group) => (
+                <option key={group.id || group.name} value={group.name}>
+                  {group.name}
                 </option>
               ))}
             </select>

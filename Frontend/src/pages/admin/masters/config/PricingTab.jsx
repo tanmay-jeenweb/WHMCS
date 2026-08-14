@@ -287,9 +287,6 @@ export default function PricingTab({
               className="block w-64 px-3 py-1.5 border border-slate-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-xs"
             >
               <option value="None">None</option>
-              <option value="Service Termination Notification">Service Termination Notification</option>
-              <option value="Trial Expired Email">Trial Expired Email</option>
-              <option value="Hosting Account Welcome Email">Hosting Account Welcome Email</option>
             </select>
             <p className="text-slate-500 text-xs font-medium">
               Choose the email template to send when the fixed term comes to an end
@@ -387,21 +384,25 @@ export default function PricingTab({
               </label>
             </div>
 
-            <div className="flex items-center gap-2 pt-1">
+             <div className="flex items-center gap-2 pt-1">
               <input
                 id="allowEarlyRenewals"
                 type="checkbox"
                 checked={allowEarlyRenewals}
+                disabled={onDemandRenewals === "system_default"}
                 onChange={(e) => setAllowEarlyRenewals(e.target.checked)}
-                className="h-4 w-4 text-[#0056cf] border-slate-300 rounded focus:ring-[#0056cf] cursor-pointer"
+                className="h-4 w-4 text-[#0056cf] border-slate-300 rounded focus:ring-[#0056cf] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               />
-              <label htmlFor="allowEarlyRenewals" className="text-slate-600 cursor-pointer font-medium select-none">
+              <label 
+                htmlFor="allowEarlyRenewals" 
+                className={`text-slate-600 font-medium select-none cursor-pointer ${onDemandRenewals === "system_default" ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
                 Check to allow clients to place renewal orders early.
               </label>
             </div>
 
             {/* Renewal Days Grid */}
-            <div className="overflow-x-auto border border-slate-200 rounded-lg max-w-2xl">
+            <div className={`overflow-x-auto border border-slate-200 rounded-lg max-w-2xl transition-opacity ${onDemandRenewals === "system_default" ? "opacity-50" : ""}`}>
               <table className="w-full text-center text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold">
@@ -419,55 +420,61 @@ export default function PricingTab({
                       <input
                         type="number"
                         value={earlyRenewalMonthly}
+                        disabled={onDemandRenewals === "system_default"}
                         onChange={(e) => setEarlyRenewalMonthly(parseInt(e.target.value) || 0)}
-                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500"
+                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                       />
                     </td>
                     <td className="p-2 border-r border-slate-200">
                       <input
                         type="number"
                         value={earlyRenewalQuarterly}
+                        disabled={onDemandRenewals === "system_default"}
                         onChange={(e) => setEarlyRenewalQuarterly(parseInt(e.target.value) || 0)}
-                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500"
+                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                       />
                     </td>
                     <td className="p-2 border-r border-slate-200">
                       <input
                         type="number"
                         value={earlyRenewalSemiannually}
+                        disabled={onDemandRenewals === "system_default"}
                         onChange={(e) => setEarlyRenewalSemiannually(parseInt(e.target.value) || 0)}
-                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500"
+                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                       />
                     </td>
                     <td className="p-2 border-r border-slate-200">
                       <input
                         type="number"
                         value={earlyRenewalAnnually}
+                        disabled={onDemandRenewals === "system_default"}
                         onChange={(e) => setEarlyRenewalAnnually(parseInt(e.target.value) || 0)}
-                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500"
+                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                       />
                     </td>
                     <td className="p-2 border-r border-slate-200">
                       <input
                         type="number"
                         value={earlyRenewalBiennially}
+                        disabled={onDemandRenewals === "system_default"}
                         onChange={(e) => setEarlyRenewalBiennially(parseInt(e.target.value) || 0)}
-                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500"
+                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                       />
                     </td>
                     <td className="p-2">
                       <input
                         type="number"
                         value={earlyRenewalTriennially}
+                        disabled={onDemandRenewals === "system_default"}
                         onChange={(e) => setEarlyRenewalTriennially(parseInt(e.target.value) || 0)}
-                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500"
+                        className="w-16 px-1.5 py-1 border border-slate-300 rounded text-center text-xs outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                       />
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <p className="text-slate-500 text-xs font-medium">
+            <p className={`text-slate-500 text-xs font-medium ${onDemandRenewals === "system_default" ? "opacity-50" : ""}`}>
               The period (in days) during which clients can place early renewal orders before the service's due date.
             </p>
           </div>
