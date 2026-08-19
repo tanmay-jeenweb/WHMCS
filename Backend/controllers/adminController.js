@@ -62,45 +62,85 @@ const createUserByAdmin = async (req, res) => {
             return res.status(400).json({ success: false, message: "Name, username, email and password are required" });
         }
         
+        // Ensure clean inputs
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanUsername = username.trim().toLowerCase();
+        const cleanDateOfJoin = (dateOfJoin && dateOfJoin.toString().trim().length > 0) ? dateOfJoin : null;
+
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = await createUser(
-            name,
-            username,
-            email,
+            name.trim(),
+            cleanUsername,
+            cleanEmail,
             hashedPassword,
             userTypeId || null,
             mobNo || null,
-            dateOfJoin || null,
+            cleanDateOfJoin,
             typeof deviceVerificationRequired === 'boolean' ? deviceVerificationRequired : true,
             true,
             role || 'user'
         );
 
-        const adminDeviceId = req.headers['x-device-id'] || req.headers['device-id'] || 'Unknown';
-        await createAuditLog(
-            req.user?.id,
-            req.user?.name || req.user?.username || 'Unknown',
-            adminDeviceId,
-            'User Master',
-            'created',
-            null,
-            {
-                id: newUser.insertId,
-                name,
-                username,
-                email,
-                user_type_id: userTypeId || null,
-                mob_no: mobNo || null,
-                date_of_join: dateOfJoin || null,
-                device_verification_required: deviceVerificationRequired,
-                role: role || 'user'
-            }
-        );
+        const newUserId = newUser.insertId;
 
-        return res.status(201).json({ success: true, message: "User created successfully" });
+        // Automatically sync created user into customer_accounts table
+        try {
+            const custCode = `CUST-${1000 + (newUserId || Math.floor(Math.random() * 9000))}`;
+            await db.execute(
+                `INSERT INTO customer_accounts 
+                 (customer_code, full_name, email, password, phone, company_name, customer_group, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE 
+                    full_name = VALUES(full_name),
+                    password = VALUES(password),
+                    phone = VALUES(phone)`,
+                [
+                    custCode,
+                    name.trim(),
+                    cleanEmail,
+                    password || '',
+                    mobNo || '',
+                    '',
+                    'Standard Client',
+                    'active'
+                ]
+            );
+        } catch (cErr) {
+            console.warn("Could not sync customer_accounts in createUserByAdmin:", cErr.message);
+        }
+
+        try {
+            const adminDeviceId = req.headers['x-device-id'] || req.headers['device-id'] || 'Unknown';
+            await createAuditLog(
+                req.user?.id || 1,
+                req.user?.name || req.user?.username || 'Admin User',
+                adminDeviceId,
+                'User Master',
+                'created',
+                null,
+                {
+                    id: newUserId,
+                    name,
+                    username: cleanUsername,
+                    email: cleanEmail,
+                    user_type_id: userTypeId || null,
+                    mob_no: mobNo || null,
+                    date_of_join: cleanDateOfJoin,
+                    device_verification_required: deviceVerificationRequired,
+                    role: role || 'user'
+                }
+            );
+        } catch (aErr) {
+            console.warn("Could not create audit log in createUserByAdmin:", aErr.message);
+        }
+
+        return res.status(201).json({ success: true, message: "User account and customer profile created successfully" });
     } catch (error) {
-        console.log("Create User Error:", error);
-        return res.status(500).json({ success: false, message: "Server Error" });
+        console.error("Create User Error:", error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ success: false, message: "A user account with this username or email already exists." });
+        }
+        return res.status(500).json({ success: false, message: error.sqlMessage || error.message || "Server Error" });
     }
 };
 

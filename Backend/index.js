@@ -28,6 +28,7 @@ const productConfigOptionsRoutes = require("./routes/productConfigOptionsRoutes.
 const productConfigUpgradesRoutes = require("./routes/productConfigUpgradesRoutes.js");
 const productConfigCrossSellsRoutes = require("./routes/productConfigCrossSellsRoutes.js");
 const productConfigLinksRoutes = require("./routes/productConfigLinksRoutes.js");
+const orderRoutes = require("./routes/orderRoutes.js");
 
 // Model Initializations
 const { initUserModel } = require("./models/userModel.js");
@@ -54,6 +55,7 @@ const { createProductConfigOptionsTables } = require("./models/productConfigOpti
 const { createProductConfigUpgradesTables } = require("./models/productConfigUpgradesModel.js");
 const { createProductConfigCrossSellsTables } = require("./models/productConfigCrossSellsModel.js");
 const { createProductConfigLinksTables } = require("./models/productConfigLinksModel.js");
+const { createOrderTable } = require("./models/orderModel.js");
 
 const app = express();
 
@@ -114,6 +116,11 @@ app.use(["/api/product-config-options", "/product-config-options"], productConfi
 app.use(["/api/product-config-upgrades", "/product-config-upgrades"], productConfigUpgradesRoutes);
 app.use(["/api/product-config-crosssells", "/product-config-crosssells"], productConfigCrossSellsRoutes);
 app.use(["/api/product-config-links", "/product-config-links"], productConfigLinksRoutes);
+app.use(["/api/orders", "/orders"], orderRoutes);
+
+app.get("/", (req, res) => {
+    res.status(200).json({ success: true, message: "WHMCS Backend API Server is Live & Running!" });
+});
 
 // Global 404 handler
 app.use((req, res) => {
@@ -156,6 +163,7 @@ const startServer = async () => {
         await createProductConfigUpgradesTables();
         await createProductConfigCrossSellsTables();
         await createProductConfigLinksTables();
+        await createOrderTable();
 
         console.log("All database tables are initialized and ready.");
 

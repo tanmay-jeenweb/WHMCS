@@ -37,3 +37,11 @@ export const updateResellerConfig = (data) => apiClient.put("/reseller-master/co
 export const getAllResellerAccounts = () => apiClient.get("/reseller-master/accounts");
 export const createResellerAccount = (data) => apiClient.post("/reseller-master/accounts", data);
 export const deleteResellerAccount = (id) => apiClient.delete(`/reseller-master/accounts/${id}`);
+
+export const createResellerClient = (data) => apiClient.post("/reseller-master/clients", data);
+export const deleteResellerClient = (id) => apiClient.delete(`/reseller-master/clients/${id}`);
+export const createResellerClientOrder = (data) => apiClient.post("/reseller-master/orders/create-for-client", data);
+export const getResellerClients = (resellerEmail) => apiClient.get(`/reseller-master/clients/${resellerEmail || ''}`);
+export const getResellerClientOrders = (resellerEmail) => apiClient.get(`/reseller-master/orders/${resellerEmail || ''}`);
+export const getResellerProductPricing = (resellerEmail) => apiClient.get(`/reseller-master/pricing/${resellerEmail}`);
+export const setResellerProductPricing = (data) => apiClient.post("/reseller-master/pricing", data);

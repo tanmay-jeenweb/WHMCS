@@ -61,7 +61,12 @@ const buildHiddenSet = (initialCols, savedVisibleKeys) => {
   if (!savedVisibleKeys || !Array.isArray(savedVisibleKeys) || savedVisibleKeys.length === 0)
     return new Set();
   const savedSet = new Set(savedVisibleKeys);
-  return new Set(initialCols.filter(c => !savedSet.has(c.key)).map(c => c.key));
+  const hiddenKeys = initialCols.filter(c => !savedSet.has(c.key)).map(c => c.key);
+  // Safeguard: Never allow hiding 100% of columns due to stale preferences
+  if (hiddenKeys.length >= initialCols.length) {
+    return new Set();
+  }
+  return new Set(hiddenKeys);
 };
 
 // ── Component ──────────────────────────────────────────────────────────────────

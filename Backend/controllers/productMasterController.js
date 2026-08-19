@@ -4,7 +4,12 @@ const { createAuditLog } = require('../models/auditLogModel.js');
 // GET ALL PRODUCTS
 const getAllProducts = async (req, res) => {
     try {
-        const [rows] = await db.execute("SELECT * FROM products_master ORDER BY id DESC");
+        const [rows] = await db.execute(`
+            SELECT p.*, pr.monthly_price, pr.annually_price, pr.triennially_price 
+            FROM products_master p 
+            LEFT JOIN product_config_pricing pr ON p.id = pr.product_id 
+            ORDER BY p.id DESC
+        `);
         res.status(200).json({ success: true, data: rows });
     } catch (error) {
         console.error("Get Products Error:", error);

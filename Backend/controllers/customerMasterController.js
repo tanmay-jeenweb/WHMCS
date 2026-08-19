@@ -80,21 +80,110 @@ const getAllCustomerAccounts = async (req, res) => {
 
 const createCustomerAccount = async (req, res) => {
     try {
-        const { customer_code, full_name, email, company_name, customer_group, status } = req.body;
+        const {
+            customer_code,
+            full_name,
+            email,
+            password,
+            domain_name,
+            phone,
+            company_name,
+            alt_email,
+            address,
+            city,
+            state,
+            zip,
+            user_count,
+            notes,
+            customer_group,
+            status
+        } = req.body;
+
         if (!customer_code || !full_name || !email) {
             return res.status(400).json({ success: false, message: "Customer Code, Full Name, and Email are required" });
         }
 
+        const bcrypt = require("bcryptjs");
+        const passToHash = password || "password123";
+        const hashedPassword = await bcrypt.hash(passToHash, 10);
+
+        // 1. Ensure user is created in users table for client login
+        try {
+            const { createUser, findUserByUsername } = require("../models/userModel.js");
+            const existingUser = await findUserByUsername(email.trim().toLowerCase());
+            if (!existingUser) {
+                await createUser(
+                    full_name.trim(),
+                    email.trim().toLowerCase(),
+                    email.trim().toLowerCase(),
+                    hashedPassword,
+                    null,
+                    phone || null,
+                    null,
+                    false, // device_verification_required = false
+                    true,  // active
+                    'user' // client role
+                );
+            }
+        } catch (uErr) {
+            console.warn("User sync warning:", uErr.message);
+        }
+
+        // 2. Ensure customer_accounts table has new columns
+        const columnsToEnsure = [
+            { name: "password", spec: "VARCHAR(255) DEFAULT ''" },
+            { name: "domain_name", spec: "VARCHAR(255) DEFAULT ''" },
+            { name: "phone", spec: "VARCHAR(100) DEFAULT ''" },
+            { name: "alt_email", spec: "VARCHAR(255) DEFAULT ''" },
+            { name: "address", spec: "VARCHAR(255) DEFAULT ''" },
+            { name: "city", spec: "VARCHAR(100) DEFAULT ''" },
+            { name: "state", spec: "VARCHAR(100) DEFAULT ''" },
+            { name: "zip", spec: "VARCHAR(50) DEFAULT ''" },
+            { name: "user_count", spec: "INT DEFAULT 1" },
+            { name: "notes", spec: "TEXT" },
+            { name: "reseller_email", spec: "VARCHAR(255) DEFAULT ''" }
+        ];
+
+        for (const col of columnsToEnsure) {
+            try {
+                const [existing] = await db.execute(`SHOW COLUMNS FROM customer_accounts LIKE '${col.name}'`);
+                if (!existing || existing.length === 0) {
+                    await db.execute(`ALTER TABLE customer_accounts ADD COLUMN ${col.name} ${col.spec}`);
+                }
+            } catch (e) {}
+        }
+
+        const effectiveResellerEmail = req.body.reseller_email || (req.user && req.user.role === 'reseller' ? req.user.email : '');
+
+        // 3. Insert or update customer_accounts
         const [result] = await db.execute(
-            `INSERT INTO customer_accounts (customer_code, full_name, email, company_name, customer_group, status)
-             VALUES (?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO customer_accounts 
+             (customer_code, full_name, email, password, domain_name, phone, company_name, alt_email, address, city, state, zip, user_count, notes, customer_group, status, reseller_email)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE 
+                full_name = VALUES(full_name),
+                domain_name = VALUES(domain_name),
+                phone = VALUES(phone),
+                company_name = VALUES(company_name),
+                reseller_email = IF(VALUES(reseller_email) != '', VALUES(reseller_email), reseller_email)`,
             [
                 customer_code,
                 full_name,
-                email,
+                email.trim().toLowerCase(),
+                passToHash,
+                domain_name || '',
+                phone || '',
                 company_name || '',
-                customer_group || 'Standard Client',
-                status || 'active'
+                alt_email || '',
+                address || '',
+                city || '',
+                state || '',
+                zip || '',
+                user_count || 1,
+                notes || '',
+                customer_group || (effectiveResellerEmail ? 'Reseller Client' : 'Standard Client'),
+                status || 'active',
+                effectiveResellerEmail
             ]
         );
 

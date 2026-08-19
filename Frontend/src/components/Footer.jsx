@@ -32,6 +32,29 @@ export default function Footer() {
         return () => clearInterval(timer);
     }, []);
 
+    const userRoleLower = (user?.role || "").toLowerCase();
+    const isAdmin = userRoleLower === "admin" || userRoleLower === "super admin" || userRoleLower.includes("admin");
+
+    if (!isAdmin) {
+        return (
+            <footer className="bg-white border-t border-slate-200 py-4 mt-auto">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 gap-2">
+                    <div>© 2012 - 2026 JustEmail Cloud Systems. All rights reserved.</div>
+                    <div className="flex space-x-4">
+                        <span 
+                            onClick={() => { window.location.href = "/store"; }}
+                            className="hover:text-[#0056cf] cursor-pointer transition-colors"
+                        >
+                            WHMCS Email Store
+                        </span>
+                        <span className="hover:text-slate-600 cursor-pointer">Terms of service</span>
+                        <span className="hover:text-slate-600 cursor-pointer">Privacy policy</span>
+                    </div>
+                </div>
+            </footer>
+        );
+    }
+
     return (
         <footer className="bg-white border-t border-slate-200 mt-auto flex flex-col">
             {user && (

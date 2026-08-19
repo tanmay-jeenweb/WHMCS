@@ -18,6 +18,8 @@ import InvoiceMasterPage from "./pages/admin/masters/InvoiceMasterPage";
 import SecurityMasterPage from "./pages/admin/masters/SecurityMasterPage";
 import CustomerMasterPage from "./pages/admin/masters/CustomerMasterPage";
 import ResellerMasterPage from "./pages/admin/masters/ResellerMasterPage";
+import ResellerDashboard from "./pages/reseller/ResellerDashboard";
+import ResellerClientDetailsPage from "./pages/reseller/ResellerClientDetailsPage";
 import MasterCreatorPage from "./pages/admin/masters/MasterCreatorPage";
 import ProductServiceMasterPage from "./pages/admin/masters/ProductServiceMasterPage";
 import ProductMasterPage from "./pages/admin/masters/ProductMasterPage";
@@ -25,12 +27,39 @@ import ActivityReport from "./pages/admin/ActivityReport";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+import StorePage from "./pages/store/StorePage";
+
 export default function AppRoutes() {
     return (
         <Routes>
             <Route
                 path="/"
                 element={<Login />}
+            />
+
+            <Route
+                path="/index.php"
+                element={<StorePage />}
+            />
+
+            <Route
+                path="/store/*"
+                element={<StorePage />}
+            />
+
+            <Route
+                path="/store"
+                element={<StorePage />}
+            />
+
+            <Route
+                path="/checkout"
+                element={<StorePage />}
+            />
+
+            <Route
+                path="/cart"
+                element={<StorePage />}
             />
 
             <Route
@@ -51,6 +80,17 @@ export default function AppRoutes() {
                 <Route
                     path="/profile"
                     element={<Profile />}
+                />
+            </Route>
+
+            <Route element={<ProtectedRoute allowedRole="reseller" />}>
+                <Route
+                    path="/reseller/dashboard"
+                    element={<ResellerDashboard />}
+                />
+                <Route
+                    path="/reseller/client/:id"
+                    element={<ResellerClientDetailsPage />}
                 />
             </Route>
 

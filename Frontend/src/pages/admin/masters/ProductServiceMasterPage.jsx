@@ -396,6 +396,7 @@ export default function ProductServiceMasterPage() {
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: 16, height: 16 }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
+                  <span>Create New Product Group</span>
                 </button>
               }
             />

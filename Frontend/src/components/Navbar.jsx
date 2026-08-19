@@ -5,7 +5,6 @@ import { usePermission } from "../context/PermissionContext";
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
-    const [isPortalMastersOpen, setIsPortalMastersOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
@@ -13,15 +12,25 @@ export default function Navbar() {
 
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const userRoleLower = (user.role || "").toLowerCase();
+    const isReseller = userRoleLower === "reseller" || userRoleLower.includes("reseller");
     const isAdmin = userRoleLower === "admin" || userRoleLower === "super admin" || userRoleLower.includes("admin");
+
+    const dashboardPath = isReseller
+      ? "/reseller/dashboard"
+      : isAdmin
+      ? "/admin/dashboard"
+      : "/user/home";
+
+    const dashboardLabel = isReseller
+      ? "Reseller Dashboard"
+      : isAdmin
+      ? "Admin Dashboard"
+      : "User Dashboard";
 
     useEffect(() => {
         const handleOutsideClick = (e) => {
             if (isOpen && !e.target.closest("#masters-dropdown")) {
                 setIsOpen(false);
-            }
-            if (isPortalMastersOpen && !e.target.closest("#portal-masters-dropdown")) {
-                setIsPortalMastersOpen(false);
             }
             if (isProfileOpen && !e.target.closest("#profile-dropdown")) {
                 setIsProfileOpen(false);
@@ -29,16 +38,10 @@ export default function Navbar() {
         };
         document.addEventListener("click", handleOutsideClick);
         return () => document.removeEventListener("click", handleOutsideClick);
-    }, [isOpen, isPortalMastersOpen, isProfileOpen]);
+    }, [isOpen, isProfileOpen]);
 
     const toggleMasters = () => {
         setIsOpen(!isOpen);
-        if (isPortalMastersOpen) setIsPortalMastersOpen(false);
-    };
-
-    const togglePortalMasters = () => {
-        setIsPortalMastersOpen(!isPortalMastersOpen);
-        if (isOpen) setIsOpen(false);
     };
 
     const handleLogout = async () => {
@@ -54,15 +57,13 @@ export default function Navbar() {
         navigate("/");
     };
 
-    // Main Masters List
+    // Main Masters List (Includes Customer Master & Reseller Master)
     const allMasters = [
         {
             name: "User Master",
             path: "/admin/dashboard",
             masterKeys: ["user_master", "device_approval"],
             icon: "fa-solid fa-users-gear",
-            color: "bg-emerald-50 text-emerald-600 border border-emerald-100/50",
-            activeColor: "bg-emerald-100 text-emerald-700",
             desc: "Manage user profiles & account statuses"
         },
         {
@@ -70,101 +71,13 @@ export default function Navbar() {
             path: "/admin/user-types",
             masterKey: "user_type",
             icon: "fa-solid fa-user-shield",
-            color: "bg-violet-50 text-violet-600 border border-violet-100/50",
-            activeColor: "bg-violet-100 text-violet-700",
             desc: "Configure access roles & permissions"
         },
-        {
-            name: "General Setting Master",
-            path: "/admin/masters/system-settings",
-            adminOnly: true,
-            icon: "fa-solid fa-sliders",
-            color: "bg-blue-50 text-blue-600 border border-blue-100/50",
-            activeColor: "bg-blue-100 text-blue-700",
-            desc: "Branding, system URLs, theme & maintenance"
-        },
-        {
-            name: "Ordering Master",
-            path: "/admin/masters/ordering-master",
-            adminOnly: true,
-            icon: "fa-solid fa-cart-shopping",
-            color: "bg-amber-50 text-amber-600 border border-amber-100/50",
-            activeColor: "bg-amber-100 text-amber-700",
-            desc: "Templates, renewals, TOS & cross-selling"
-        },
-        {
-            name: "Domain Master",
-            path: "/admin/masters/domain-master",
-            adminOnly: true,
-            icon: "fa-solid fa-globe",
-            color: "bg-teal-50 text-teal-600 border border-teal-100/50",
-            activeColor: "bg-teal-100 text-teal-700",
-            desc: "Registrations, renewals, NS & contact defaults"
-        },
-        {
-            name: "Email Master",
-            path: "/admin/masters/email-master",
-            adminOnly: true,
-            icon: "fa-solid fa-envelope",
-            color: "bg-purple-50 text-purple-600 border border-purple-100/50",
-            activeColor: "bg-purple-100 text-purple-700",
-            desc: "Mail providers, signatures, HTML CSS templates"
-        },
-        {
-            name: "Support Master",
-            path: "/admin/masters/support-master",
-            adminOnly: true,
-            icon: "fa-solid fa-headset",
-            color: "bg-rose-50 text-rose-600 border border-rose-100/50",
-            activeColor: "bg-rose-100 text-rose-700",
-            desc: "Ticket reply rules, gravatars & support email"
-        },
-        {
-            name: "Invoice Master",
-            path: "/admin/masters/invoice-master",
-            adminOnly: true,
-            icon: "fa-solid fa-file-invoice-dollar",
-            color: "bg-emerald-50 text-emerald-600 border border-emerald-100/50",
-            activeColor: "bg-emerald-100 text-emerald-700",
-            desc: "Generation rules, late fees, tax & starting IDs"
-        },
-        {
-            name: "Security Master",
-            path: "/admin/masters/security-master",
-            adminOnly: true,
-            icon: "fa-solid fa-shield-halved",
-            color: "bg-red-50 text-red-600 border border-red-100/50",
-            activeColor: "bg-red-100 text-red-700",
-            desc: "Captcha, IP bans, CSRF tokens & password policy"
-        },
-        {
-            name: "Product/Service Group Master",
-            path: "/admin/masters/product-services",
-            adminOnly: true,
-            icon: "fa-solid fa-box-open",
-            color: "bg-emerald-50 text-emerald-600 border border-emerald-100/50",
-            activeColor: "bg-emerald-100 text-emerald-700",
-            desc: "Configure product groups, store URLs, headlines, and taglines"
-        },
-        {
-            name: "Product/Service Master",
-            path: "/admin/masters/product-master",
-            adminOnly: true,
-            icon: "fa-solid fa-cubes",
-            color: "bg-teal-50 text-teal-600 border border-teal-100/50",
-            activeColor: "bg-teal-100 text-teal-700",
-            desc: "Configure individual products, product types, group links and server modules"
-        }
-    ];
-
-    // Dedicated Portal & Accounts Masters
-    const portalMasters = [
         {
             name: "Customer Master",
             path: "/admin/masters/customer-master",
             adminOnly: true,
             icon: "fa-solid fa-user-gear",
-            color: "bg-indigo-50 text-indigo-600 border border-indigo-100/50",
             desc: "Client portal permissions, views & customer account IDs"
         },
         {
@@ -172,17 +85,71 @@ export default function Navbar() {
             path: "/admin/masters/reseller-master",
             adminOnly: true,
             icon: "fa-solid fa-handshake-angle",
-            color: "bg-amber-50 text-amber-600 border border-amber-100/50",
             desc: "Reseller tiers, commissions, whitelabeling & reseller account IDs"
         },
         {
-            name: "Master Creator Master",
-            path: "/admin/masters/master-creator",
+            name: "General Setting Master",
+            path: "/admin/masters/system-settings",
             adminOnly: true,
-            icon: "fa-solid fa-wand-magic-sparkles",
-            color: "bg-sky-50 text-sky-600 border border-sky-100/50",
-            desc: "Dynamic master creator & field configurator engine"
-        }
+            icon: "fa-solid fa-sliders",
+            desc: "Branding, system URLs, theme & maintenance"
+        },
+        {
+            name: "Ordering Master",
+            path: "/admin/masters/ordering-master",
+            adminOnly: true,
+            icon: "fa-solid fa-cart-shopping",
+            desc: "Templates, renewals, TOS & cross-selling"
+        },
+        {
+            name: "Domain Master",
+            path: "/admin/masters/domain-master",
+            adminOnly: true,
+            icon: "fa-solid fa-globe",
+            desc: "Registrations, renewals, NS & contact defaults"
+        },
+        {
+            name: "Email Master",
+            path: "/admin/masters/email-master",
+            adminOnly: true,
+            icon: "fa-solid fa-envelope",
+            desc: "Mail providers, signatures, HTML CSS templates"
+        },
+        {
+            name: "Support Master",
+            path: "/admin/masters/support-master",
+            adminOnly: true,
+            icon: "fa-solid fa-headset",
+            desc: "Ticket reply rules, gravatars & support email"
+        },
+        {
+            name: "Invoice Master",
+            path: "/admin/masters/invoice-master",
+            adminOnly: true,
+            icon: "fa-solid fa-file-invoice-dollar",
+            desc: "Generation rules, late fees, tax & starting IDs"
+        },
+        {
+            name: "Security Master",
+            path: "/admin/masters/security-master",
+            adminOnly: true,
+            icon: "fa-solid fa-shield-halved",
+            desc: "Captcha, IP bans, CSRF tokens & password policy"
+        },
+        {
+            name: "Product/Service Group Master",
+            path: "/admin/masters/product-services",
+            adminOnly: true,
+            icon: "fa-solid fa-box-open",
+            desc: "Configure product groups, store URLs, headlines, and taglines"
+        },
+        {
+            name: "Product/Service Master",
+            path: "/admin/masters/product-master",
+            adminOnly: true,
+            icon: "fa-solid fa-cubes",
+            desc: "Configure individual products, product types, group links and server modules"
+        },
     ];
 
     const availableMasters = allMasters.filter(m => {
@@ -194,13 +161,34 @@ export default function Navbar() {
 
     return (
         <nav className="bg-white shadow-sm border-b border-slate-200 flex flex-col relative z-50">
-            {/* First Row */}
+            {/* Top Bar Row */}
             <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative z-40">
-                <div className="flex items-center gap-2 select-none">
-                    <span className="text-2xl font-black tracking-tighter bg-gradient-to-r from-blue-600 via-sky-500 to-teal-400 bg-clip-text text-transparent">
-                        WHMCS
-                    </span>
-                </div>
+                {isAdmin ? (
+                    <div className="flex items-center gap-2 select-none cursor-pointer" onClick={() => navigate("/admin/dashboard")}>
+                        <span className="text-2xl font-black tracking-tighter bg-gradient-to-r from-blue-600 via-sky-500 to-teal-400 bg-clip-text text-transparent">
+                            WHMCS
+                        </span>
+                    </div>
+                ) : (
+                    <div 
+                        className="flex items-center gap-2.5 select-none cursor-pointer" 
+                        onClick={() => navigate("/store")}
+                        title="Visit JustEmail Cloud Store"
+                    >
+                        <img
+                            src="/justemail_png.png"
+                            alt="JustEmail Logo"
+                            className="h-8 w-auto object-contain"
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "/jasmin_-removebg-preview.png";
+                            }}
+                        />
+                        <span className="text-xs font-bold text-[#0056cf] bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase tracking-wider">
+                            Client Portal
+                        </span>
+                    </div>
+                )}
 
                 <div className="flex items-center gap-6">
                     {/* Profile Dropdown */}
@@ -273,91 +261,32 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {/* Second Row: Navigation Tabs */}
+            {/* Second Row: Navigation Tabs (User Dashboard | Masters | Activity Report) */}
             {user.role && (
                 <div className="bg-[#0056cf] border-t border-slate-200 px-4 sm:px-6 lg:px-8 py-0 flex flex-wrap items-center gap-0">
                     <div className="flex items-center relative z-30" id="custom-nav-dropdown">
                         
-                        {/* 1. Customer & Reseller Masters Dropdown (NEW SECTION ON LEFT) */}
-                        {isAdmin && (
-                            <div className="relative" id="portal-masters-dropdown">
-                                <button
-                                    onClick={togglePortalMasters}
-                                    className={`flex items-center justify-between px-4 py-2.5 text-sm border-r border-l border-white/10 rounded-none focus:outline-none transition-all duration-200 font-semibold text-white cursor-pointer ${
-                                        isPortalMastersOpen ? "bg-white/15" : "bg-[#0056cf] hover:bg-white/5"
-                                    }`}
-                                >
-                                    <span className="flex items-center gap-2 truncate">
-                                        <span className="font-bold text-amber-300">👑 Client & Reseller Masters</span>
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth={2.5}
-                                            stroke="currentColor"
-                                            className={`w-3.5 h-3.5 text-amber-300 transition-transform duration-200 ${isPortalMastersOpen ? "rotate-180" : ""}`}
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                        </svg>
-                                    </span>
-                                </button>
-
-                                {isPortalMastersOpen && (
-                                    <div className="absolute left-0 top-full mt-1.5 w-96 bg-white border border-slate-200 rounded-2xl shadow-xl p-3.5 z-50 origin-top animate-in fade-in slide-in-from-top-2 duration-200">
-                                        <div className="space-y-1.5">
-                                            {portalMasters.map((m, idx) => {
-                                                const isActive = location.pathname === m.path;
-                                                return (
-                                                    <button
-                                                        key={idx}
-                                                        onClick={() => {
-                                                            navigate(m.path);
-                                                            setIsPortalMastersOpen(false);
-                                                        }}
-                                                        className={`relative group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer text-left w-full border border-transparent ${isActive
-                                                            ? "bg-blue-50 text-blue-900 font-bold border-blue-100"
-                                                            : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                                                            }`}
-                                                    >
-                                                        <div className={`flex items-center justify-center w-8 h-8 rounded-lg shadow-sm shrink-0 ${m.color}`}>
-                                                            <i className={`${m.icon} text-sm`}></i>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs font-bold text-slate-900">{m.name}</p>
-                                                            <p className="text-[11px] text-slate-500 leading-tight mt-0.5">{m.desc}</p>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* 2. User Dashboard Tab */}
+                        {/* 1. Dynamic Dashboard Navigation Tab */}
                         <div className="relative">
                             <button
-                                onClick={() => {
-                                    navigate("/user/home");
-                                }}
-                                className={`flex items-center justify-between w-40 px-4 py-2.5 text-sm border-r border-white/10 rounded-none focus:outline-none transition-all duration-200 font-semibold text-white cursor-pointer ${
-                                    location.pathname === "/user/home" ? "bg-white/15" : "bg-[#0056cf] hover:bg-white/5"
+                                onClick={() => navigate(dashboardPath)}
+                                className={`flex items-center justify-between min-w-44 px-4 py-2.5 text-sm border-r border-l border-white/10 rounded-none focus:outline-none transition-all duration-200 font-semibold text-white cursor-pointer ${
+                                    location.pathname === dashboardPath ? "bg-white/15 font-bold" : "bg-[#0056cf] hover:bg-white/5"
                                 }`}
                             >
                                 <span className="flex items-center gap-2.5 truncate mx-auto">
-                                    <span className="font-semibold text-white truncate">User Dashboard</span>
+                                    <span className="font-semibold text-white truncate">{dashboardLabel}</span>
                                 </span>
                             </button>
                         </div>
 
-                        {/* 3. Masters Dropdown */}
+                        {/* 2. Masters Dropdown (Includes Customer & Reseller Masters) */}
                         {availableMasters.length > 0 && (
                             <div className="relative" id="masters-dropdown">
                                 <button
                                     onClick={toggleMasters}
                                     className={`flex items-center justify-between w-40 px-4 py-2.5 text-sm border-r border-white/10 rounded-none focus:outline-none transition-all duration-200 font-semibold text-white cursor-pointer ${
-                                        isOpen ? "bg-white/15" : "bg-[#0056cf] hover:bg-white/5"
+                                        isOpen || location.pathname.includes("/admin/masters") ? "bg-white/15 font-bold" : "bg-[#0056cf] hover:bg-white/5"
                                     }`}
                                 >
                                     <span className="flex items-center gap-2.5 truncate mx-auto">
@@ -376,7 +305,7 @@ export default function Navbar() {
                                 </button>
 
                                 {isOpen && (
-                                    <div className="absolute left-0 top-full mt-1.5 w-140 bg-white border border-slate-200 rounded-2xl shadow-xl p-3.5 z-50 origin-top animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div className="absolute left-0 top-full mt-1.5 w-[560px] bg-white border border-slate-200 rounded-2xl shadow-xl p-3.5 z-50 origin-top animate-in fade-in slide-in-from-top-2 duration-200 max-h-[80vh] overflow-y-auto">
                                         <div className="grid grid-cols-2 gap-1.5">
                                             {availableMasters.map((m, idx) => {
                                                 const isActive = location.pathname === m.path;
@@ -400,11 +329,12 @@ export default function Navbar() {
                                                             <i className={`${m.icon || "fa-solid fa-folder"} text-xs`}></i>
                                                         </div>
 
-                                                        <div className="flex-1">
-                                                            <p className={`text-sm font-semibold leading-snug py-0.5 transition-colors whitespace-normal break-words ${isActive ? "text-indigo-900 font-bold" : "text-slate-800 group-hover:text-slate-950"
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className={`text-xs font-bold leading-snug truncate transition-colors ${isActive ? "text-indigo-900" : "text-slate-800 group-hover:text-slate-950"
                                                                 }`}>
                                                                 {m.name}
                                                             </p>
+                                                            <p className="text-[10px] text-slate-400 truncate">{m.desc}</p>
                                                         </div>
                                                     </button>
                                                 );
@@ -415,15 +345,13 @@ export default function Navbar() {
                             </div>
                         )}
 
-                        {/* 4. Activity Report Tab */}
+                        {/* 3. Activity Report Tab */}
                         {hasPermission("activity_report", "read") && (
                             <div className="relative">
                                 <button
-                                    onClick={() => {
-                                        navigate("/admin/report");
-                                    }}
+                                    onClick={() => navigate("/admin/report")}
                                     className={`flex items-center justify-between w-40 px-4 py-2.5 text-sm border-r border-white/10 rounded-none focus:outline-none transition-all duration-200 font-semibold text-white cursor-pointer ${
-                                        location.pathname === "/admin/report" ? "bg-white/15" : "bg-[#0056cf] hover:bg-white/5"
+                                        location.pathname === "/admin/report" ? "bg-white/15 font-bold" : "bg-[#0056cf] hover:bg-white/5"
                                     }`}
                                 >
                                     <span className="flex items-center gap-2.5 truncate mx-auto">

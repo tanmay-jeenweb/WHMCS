@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 
 function App() {
     const location = useLocation();
-    const hideFooterOnPaths = ["/"];
+    const hideFooterOnPaths = ["/", "/store"];
     const shouldHideFooter = hideFooterOnPaths.includes(location.pathname);
 
     return (

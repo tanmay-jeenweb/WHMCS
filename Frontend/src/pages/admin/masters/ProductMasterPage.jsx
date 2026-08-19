@@ -45,11 +45,11 @@ function ProductForm({ row, productGroups, onClose, onSave, saving }) {
 
   const [productName, setProductName] = useState(row?.product_name || "");
   const [productType, setProductType] = useState(row?.product_type || "Shared hosting");
-  
+
   // Set default group if editing or pick first available group
   const initialGroup = row?.product_group_name || (productGroups.length > 0 ? productGroups[0].name : "");
   const initialGroupId = row?.product_group_id || (productGroups.length > 0 ? productGroups[0].id : 0);
-  
+
   const [productGroupName, setProductGroupName] = useState(initialGroup);
   const [productGroupId, setProductGroupId] = useState(initialGroupId);
 
@@ -157,7 +157,7 @@ function ProductForm({ row, productGroups, onClose, onSave, saving }) {
       <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            
+
             {/* Product Name */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -213,11 +213,10 @@ function ProductForm({ row, productGroups, onClose, onSave, saving }) {
                   return (
                     <label
                       key={type.id}
-                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                        isSelected
-                          ? "border-blue-600 bg-blue-50/70 text-blue-900 shadow-sm ring-2 ring-blue-100"
-                          : "border-slate-200 bg-slate-50/50 text-slate-700 hover:bg-slate-100/60"
-                      }`}
+                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${isSelected
+                        ? "border-blue-600 bg-blue-50/70 text-blue-900 shadow-sm ring-2 ring-blue-100"
+                        : "border-slate-200 bg-slate-50/50 text-slate-700 hover:bg-slate-100/60"
+                        }`}
                     >
                       <input
                         type="radio"
@@ -472,11 +471,10 @@ export default function ProductMasterPage() {
         minWidth: "120px",
         sortable: true,
         render: (row) => (
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-            row.module_name === "cPanel"
-              ? "bg-orange-100 text-orange-800 border border-orange-200"
-              : "bg-slate-100 text-slate-600 border border-slate-200"
-          }`}>
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${row.module_name === "cPanel"
+            ? "bg-orange-100 text-orange-800 border border-orange-200"
+            : "bg-slate-100 text-slate-600 border border-slate-200"
+            }`}>
             {row.module_name || "No Module"}
           </span>
         )
@@ -530,7 +528,7 @@ export default function ProductMasterPage() {
       <Navbar title="CRM Admin" />
 
       <main style={{ flex: 1, display: "flex", flexDirection: "column", width: "100%", margin: "0 auto", padding: "32px 30px" }}>
-        
+
         {/* View Routing */}
         {configuringRow ? (
           <ProductConfigForm

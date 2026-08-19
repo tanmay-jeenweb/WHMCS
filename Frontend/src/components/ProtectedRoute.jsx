@@ -24,8 +24,14 @@ export default function ProtectedRoute({ allowedRole, allowedModule, requiredMas
     const userRoleLower = (user.role || "").toLowerCase();
     const isAdminUser = userRoleLower === "admin" || userRoleLower === "super admin" || userRoleLower.includes("admin");
 
+    // Strict role check for specific non-admin allowedRole (e.g. reseller)
+    if (allowedRole === "reseller" && userRoleLower !== "reseller") {
+        if (isAdminUser) return <Navigate to="/admin/dashboard" replace />;
+        return <Navigate to="/user/home" replace />;
+    }
+
     // Role check (admin or specific master permission)
-    if (allowedRole && !isAdminUser) {
+    if (allowedRole && allowedRole !== "reseller" && !isAdminUser) {
         const isAllowedByMaster = (requiredMaster && hasPermission(requiredMaster, requiredAction)) ||
                                   (requiredMasters && requiredMasters.some(m => hasPermission(m, requiredAction)));
         if (!isAllowedByMaster) {

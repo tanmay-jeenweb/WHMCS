@@ -35,13 +35,49 @@ const createCustomerMasterTables = async () => {
             customer_code VARCHAR(100) NOT NULL UNIQUE,
             full_name VARCHAR(255) NOT NULL,
             email VARCHAR(255) NOT NULL UNIQUE,
+            password VARCHAR(255) DEFAULT '',
+            domain_name VARCHAR(255) DEFAULT '',
+            phone VARCHAR(100) DEFAULT '',
             company_name VARCHAR(255) DEFAULT '',
+            alt_email VARCHAR(255) DEFAULT '',
+            address VARCHAR(255) DEFAULT '',
+            city VARCHAR(100) DEFAULT '',
+            state VARCHAR(100) DEFAULT '',
+            zip VARCHAR(50) DEFAULT '',
+            user_count INT DEFAULT 1,
+            notes TEXT,
             customer_group VARCHAR(100) DEFAULT 'Standard Client',
             status ENUM('active', 'inactive', 'closed') DEFAULT 'active',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )
     `);
+
+    // Ensure columns exist if table was previously created
+    const columnsToEnsure = [
+        { name: "password", spec: "VARCHAR(255) DEFAULT ''" },
+        { name: "domain_name", spec: "VARCHAR(255) DEFAULT ''" },
+        { name: "phone", spec: "VARCHAR(100) DEFAULT ''" },
+        { name: "alt_email", spec: "VARCHAR(255) DEFAULT ''" },
+        { name: "address", spec: "VARCHAR(255) DEFAULT ''" },
+        { name: "city", spec: "VARCHAR(100) DEFAULT ''" },
+        { name: "state", spec: "VARCHAR(100) DEFAULT ''" },
+        { name: "zip", spec: "VARCHAR(50) DEFAULT ''" },
+        { name: "user_count", spec: "INT DEFAULT 1" },
+        { name: "notes", spec: "TEXT" }
+    ];
+
+    for (const col of columnsToEnsure) {
+        try {
+            const [existing] = await db.execute(`SHOW COLUMNS FROM customer_accounts LIKE '${col.name}'`);
+            if (!existing || existing.length === 0) {
+                await db.execute(`ALTER TABLE customer_accounts ADD COLUMN ${col.name} ${col.spec}`);
+                console.log(`✅ Added column ${col.name} to customer_accounts table.`);
+            }
+        } catch (e) {
+            console.warn(`Column migration check warning for ${col.name}:`, e.message);
+        }
+    }
 
     // Insert sample customer records if table is empty
     const [records] = await db.execute("SELECT COUNT(*) as count FROM customer_accounts");
